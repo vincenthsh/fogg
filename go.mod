@@ -1,8 +1,8 @@
 module github.com/chanzuckerberg/fogg
 
-go 1.18
+go 1.19
 
-replace github.com/spf13/afero v1.8.2 => github.com/chanzuckerberg/afero v0.0.0-20190514223411-36a9495a9b51
+replace github.com/spf13/afero => github.com/chanzuckerberg/afero v0.0.0-20190514223411-36a9495a9b51
 
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
