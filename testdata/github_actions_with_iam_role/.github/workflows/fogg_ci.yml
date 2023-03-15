@@ -24,8 +24,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: foo
-          aws-region: bar
+          role-to-assume: infraci
+          aws-region: us-east-1
       - run: .fogg/bin/fogg apply
         env:
           FOGG_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
