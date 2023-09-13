@@ -395,11 +395,13 @@ func applyEnvs(
 				}
 				mi = append(mi, moduleInvocation{
 					module: v2.ComponentModule{
-						Name:      componentPlan.ModuleName,
-						Source:    componentPlan.ModuleSource,
-						Version:   nil,
-						Variables: componentPlan.Variables,
-						Prefix:    nil,
+						Name:         componentPlan.ModuleName,
+						Source:       componentPlan.ModuleSource,
+						ForEach:      componentPlan.ModuleForEach,
+						Version:      nil,
+						Variables:    componentPlan.Variables,
+						Prefix:       nil,
+						ProvidersMap: componentPlan.ProvidersMap,
 					},
 					downloadFunc: downloader,
 				})
@@ -586,9 +588,11 @@ type moduleData struct {
 	ModuleSource               string
 	ModuleVersion              string
 	ModulePrefix               string
+	ModuleForEach              *string
 	Variables                  []string
 	Outputs                    []*tfconfig.Output
 	IntegrationRegistryEntries []*IntegrationRegistryEntry
+	ProvidersMap               map[string]string
 }
 
 type IntegrationRegistryEntry struct {
@@ -740,9 +744,11 @@ func applyModuleInvocation(
 			ModuleSource:               moduleAddressForSource,
 			ModuleVersion:              moduleVersion,
 			ModulePrefix:               modulePrefix,
+			ModuleForEach:              mi.module.ForEach,
 			Variables:                  variables,
 			Outputs:                    outputs,
 			IntegrationRegistryEntries: integrationRegistryEntries,
+			ProvidersMap:               mi.module.ProvidersMap,
 		})
 	}
 
