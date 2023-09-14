@@ -12,7 +12,7 @@ module "{{.ModuleName}}" {
   {{- $outer := . }}
   {{- range .Variables }}
     {{- if $outer.ModuleForEach }}
-    {{.}} = each.value.{{$outer.ModulePrefix}}{{.}}
+    {{.}} = each.value.{{.}}
     {{- else }}
     {{.}} = local.{{$outer.ModulePrefix}}{{.}}
     {{- end }}

@@ -604,6 +604,7 @@ type IntegrationRegistryEntry struct {
 	Path          *string
 	ForEach       bool
 	PathForEach   *string
+	Provider      *string
 }
 
 type modulesData struct {
@@ -665,63 +666,14 @@ func applyModuleInvocation(
 		integrationRegistryEntries := make([]*IntegrationRegistryEntry, 0)
 		integration := mi.module.Integration
 		if integration == nil {
+			// default to "none"
 			integration = &v2.ModuleIntegrationConfig{
 				Mode: util.StrPtr("none"),
 			}
 		}
 		for _, o := range moduleConfig.Outputs {
 			outputs = append(outputs, o)
-			outputRef := fmt.Sprintf("module.%s.%s", moduleName, o.Name)
-			outputRefFmted := outputRef
-			if integration.Format != nil {
-				outputRefFmted = fmt.Sprintf(*integration.Format, outputRef)
-			}
-			if *integration.Mode != "none" {
-				wrapEntry := IntegrationRegistryEntry{
-					Output:        o,
-					OutputRef:     outputRefFmted,
-					DropComponent: integration.DropComponent,
-					DropPrefix:    integration.DropPrefix,
-					PathInfix:     integration.PathInfix,
-				}
-				for eName, e := range integration.OutputsMap {
-					if o.Name == eName {
-						if e.Format != nil {
-							outputRefFmted = fmt.Sprintf(*e.Format, outputRef)
-						}
-						if e.ForEach {
-							outputRef = "each.value"
-							outputRefFmted = outputRef
-							if integration.Format != nil {
-								outputRefFmted = fmt.Sprintf(*integration.Format, outputRef)
-							}
-							if e.Format != nil {
-								outputRefFmted = fmt.Sprintf(*e.Format, outputRef)
-							}
-						}
-						dropComponent := integration.DropComponent
-						if e.DropComponent != nil {
-							dropComponent = *e.DropComponent
-						}
-						wrapEntry = IntegrationRegistryEntry{
-							Output:        o,
-							OutputRef:     outputRefFmted,
-							DropComponent: dropComponent,
-							DropPrefix:    integration.DropPrefix,
-							PathInfix:     integration.PathInfix,
-							Path:          e.Path,
-							ForEach:       e.ForEach,
-							PathForEach:   e.PathForEach,
-						}
-						if *integration.Mode == "selected" {
-							integrationRegistryEntries = append(integrationRegistryEntries, &wrapEntry)
-						}
-					}
-				}
-				if *integration.Mode != "selected" {
-					integrationRegistryEntries = append(integrationRegistryEntries, &wrapEntry)
-				}
-			}
+			integrationRegistryEntries = integrateOutput(moduleName, o, mi, integration, integrationRegistryEntries)
 		}
 		sort.Slice(outputs, func(i, j int) bool {
 			return outputs[i].Name < outputs[j].Name
@@ -806,6 +758,82 @@ func applyModuleInvocation(
 	}
 
 	return nil
+}
+
+// Evaluate integrationRegistry configuration and return updated list of integrationRegistryEntries
+func integrateOutput(
+	moduleName string,
+	o *tfconfig.Output,
+	mi moduleInvocation,
+	integration *v2.ModuleIntegrationConfig,
+	integrationRegistryEntries []*IntegrationRegistryEntry,
+) []*IntegrationRegistryEntry {
+	// dont integrate
+	if *integration.Mode == "none" {
+		return integrationRegistryEntries
+	}
+
+	outputRef := fmt.Sprintf("module.%s.%s", moduleName, o.Name)
+	if mi.module.ForEach != nil {
+		outputRef = "each.value"
+	}
+	outputRefFmted := outputRef
+	if integration.Format != nil {
+		outputRefFmted = fmt.Sprintf(*integration.Format, outputRef)
+	}
+	wrapEntry := IntegrationRegistryEntry{
+		Output:        o,
+		OutputRef:     outputRefFmted,
+		DropComponent: integration.DropComponent,
+		DropPrefix:    integration.DropPrefix,
+		PathInfix:     integration.PathInfix,
+		Provider:      integration.Provider,
+	}
+	for eName, e := range integration.OutputsMap {
+		if o.Name == eName {
+			if e.Format != nil {
+				outputRefFmted = fmt.Sprintf(*e.Format, outputRef)
+			}
+			if e.ForEach {
+				if mi.module.ForEach != nil {
+					outputRef = "each.value.output_value"
+				} else {
+					outputRef = "each.value"
+				}
+				outputRefFmted = outputRef
+				if integration.Format != nil {
+					outputRefFmted = fmt.Sprintf(*integration.Format, outputRef)
+				}
+				if e.Format != nil {
+					outputRefFmted = fmt.Sprintf(*e.Format, outputRef)
+				}
+			}
+			dropComponent := integration.DropComponent
+			if e.DropComponent != nil {
+				dropComponent = *e.DropComponent
+			}
+			wrapEntry = IntegrationRegistryEntry{
+				Output:        o,
+				OutputRef:     outputRefFmted,
+				DropComponent: dropComponent,
+				DropPrefix:    integration.DropPrefix,
+				PathInfix:     integration.PathInfix,
+				Path:          e.Path,
+				ForEach:       e.ForEach,
+				PathForEach:   e.PathForEach,
+				Provider:      integration.Provider,
+			}
+			// integrate only mapped
+			if *integration.Mode == "selected" {
+				integrationRegistryEntries = append(integrationRegistryEntries, &wrapEntry)
+			}
+		}
+	}
+	// also integrate non-mapped outputs
+	if *integration.Mode != "selected" {
+		integrationRegistryEntries = append(integrationRegistryEntries, &wrapEntry)
+	}
+	return integrationRegistryEntries
 }
 
 func calculateModuleAddressForSource(path, moduleAddress string, moduleVersion string) (string, string, error) {
