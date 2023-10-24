@@ -86,6 +86,22 @@ func TestIntegration(t *testing.T) {
 				configMode, e := testdataFs.Stat(configFile)
 				r.NoError(e)
 				r.NoError(afero.WriteFile(fs, configFile, configContents, configMode.Mode()))
+				// if fogg.d exists, copy all partial configs too
+				confDir, e := testdataFs.Stat("fogg.d")
+				fs.Mkdir("fogg.d", 0700)
+				if e == nil && confDir.IsDir() {
+					afero.Walk(testdataFs, "fogg.d", func(path string, info os.FileInfo, err error) error {
+						if !info.IsDir() {
+							partialConfigContents, e := afero.ReadFile(testdataFs, path)
+							r.NoError(e)
+							partialConfigMode, e := testdataFs.Stat(configFile)
+							r.NoError(e)
+							r.NoError(afero.WriteFile(fs, path, partialConfigContents, partialConfigMode.Mode()))
+							return nil
+						}
+						return nil
+					})
+				}
 
 				conf, e := config.FindAndReadConfig(fs, configFile)
 				r.NoError(e)
