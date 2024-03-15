@@ -412,7 +412,7 @@ func (p *Plan) buildAtlantisConfig(c *v2.Config, foggVersion string) AtlantisCon
 					ApplyRequirements: []string{atlantis.ApprovedRequirement},
 					Autoplan: &atlantis.Autoplan{
 						Enabled:      util.Ptr(true),
-						WhenModified: generateWhenModified(uniqueModuleSources, d.PathToRepoRoot, modulePrefixes),
+						WhenModified: generateWhenModified(uniqueModuleSources, d.PathToRepoRoot, modulePrefixes, d.HasDependsOn),
 					},
 				})
 			}
@@ -431,10 +431,12 @@ func (p *Plan) buildAtlantisConfig(c *v2.Config, foggVersion string) AtlantisCon
 	}
 }
 
-func generateWhenModified(moduleSources []string, pathToRepoRoot string, modulePrefixes []string) []string {
+func generateWhenModified(moduleSources []string, pathToRepoRoot string, modulePrefixes []string, hasDependsOn bool) []string {
 	whenModified := []string{
 		"*.tf",
-		"!remote-states.tf",
+	}
+	if !hasDependsOn {
+		whenModified = append(whenModified, "!remote-states.tf")
 	}
 	for _, moduleSource := range moduleSources {
 		if startsWithPrefix(moduleSource, modulePrefixes) {
