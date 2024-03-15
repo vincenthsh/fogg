@@ -383,10 +383,14 @@ func (p *Plan) buildGitHubActionsConfig(c *v2.Config, foggVersion string) GitHub
 // buildAtlantisConfig must be build after Envs
 func (p *Plan) buildAtlantisConfig(c *v2.Config, foggVersion string) AtlantisConfig {
 	enabled := false
+	autoplanRemoteStates := false
 	repoCfg := atlantis.RepoCfg{}
 	if c.Defaults.Tools != nil && c.Defaults.Tools.Atlantis != nil {
 		enabled = *c.Defaults.Tools.Atlantis.Enabled
 		modulePrefixes := c.Defaults.Tools.Atlantis.ModulePrefixes
+		if c.Defaults.Tools.Atlantis.AutoplanRemoteStates != nil {
+			autoplanRemoteStates = *c.Defaults.Tools.Atlantis.AutoplanRemoteStates
+		}
 		if len(modulePrefixes) == 0 {
 			modulePrefixes = append(modulePrefixes, "terraform/modules/")
 		}
@@ -403,7 +407,7 @@ func (p *Plan) buildAtlantisConfig(c *v2.Config, foggVersion string) AtlantisCon
 						uniqueModuleSources = append(uniqueModuleSources, *m.Source)
 					}
 				}
-
+				autoplanRemoteState := autoplanRemoteStates && d.HasDependsOn
 				projects = append(projects, atlantis.Project{
 					Name:              util.Ptr(fmt.Sprintf("%s_%s", envName, cName)),
 					Dir:               util.Ptr(fmt.Sprintf("terraform/envs/%s/%s", envName, cName)),
@@ -412,7 +416,7 @@ func (p *Plan) buildAtlantisConfig(c *v2.Config, foggVersion string) AtlantisCon
 					ApplyRequirements: []string{atlantis.ApprovedRequirement},
 					Autoplan: &atlantis.Autoplan{
 						Enabled:      util.Ptr(true),
-						WhenModified: generateWhenModified(uniqueModuleSources, d.PathToRepoRoot, modulePrefixes, d.HasDependsOn),
+						WhenModified: generateWhenModified(uniqueModuleSources, d.PathToRepoRoot, modulePrefixes, autoplanRemoteState),
 					},
 				})
 			}
@@ -431,11 +435,11 @@ func (p *Plan) buildAtlantisConfig(c *v2.Config, foggVersion string) AtlantisCon
 	}
 }
 
-func generateWhenModified(moduleSources []string, pathToRepoRoot string, modulePrefixes []string, hasDependsOn bool) []string {
+func generateWhenModified(moduleSources []string, pathToRepoRoot string, modulePrefixes []string, autoplanRemoteState bool) []string {
 	whenModified := []string{
 		"*.tf",
 	}
-	if !hasDependsOn {
+	if !autoplanRemoteState {
 		whenModified = append(whenModified, "!remote-states.tf")
 	}
 	for _, moduleSource := range moduleSources {

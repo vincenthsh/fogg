@@ -10,6 +10,8 @@ defaults:
   tools:
     atlantis:
       enabled: true
+      # if depends_on is defined, don't ignore `remote-state.tf`
+      autoplan_remote_states: true
       module_prefixes:
         - terraform/modules/
         - foo_modules/
