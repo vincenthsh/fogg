@@ -361,6 +361,7 @@ type Component struct {
 	Outputs       []string             `yaml:"outputs"`
 	Modules       []v2.ComponentModule `yaml:"modules"`
 	Global        *Component           `yaml:"global"`
+	DependsOn     []string             `yaml:"depends_on"`
 }
 
 // Env is an env

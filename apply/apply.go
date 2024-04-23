@@ -416,6 +416,7 @@ func applyEnvs(
 						Outputs:      componentPlan.Outputs,
 						Prefix:       nil,
 						ProvidersMap: componentPlan.ProvidersMap,
+						DependsOn:    componentPlan.DependsOn,
 					},
 					downloadFunc: downloader,
 				})
@@ -607,6 +608,7 @@ type moduleData struct {
 	Outputs                    []*tfconfig.Output
 	IntegrationRegistryEntries []*IntegrationRegistryEntry
 	ProvidersMap               map[string]string
+	DependsOn                  []string
 }
 
 type IntegrationRegistryEntry struct {
@@ -738,6 +740,7 @@ func applyModuleInvocation(
 			Outputs:                    outputs,
 			IntegrationRegistryEntries: integrationRegistryEntries,
 			ProvidersMap:               mi.module.ProvidersMap,
+			DependsOn:                  mi.module.DependsOn,
 		})
 	}
 
