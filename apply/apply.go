@@ -416,7 +416,6 @@ func applyEnvs(
 						Outputs:      componentPlan.Outputs,
 						Prefix:       nil,
 						ProvidersMap: componentPlan.ProvidersMap,
-						DependsOn:    componentPlan.DependsOn,
 					},
 					downloadFunc: downloader,
 				})
