@@ -230,15 +230,16 @@ type Env struct {
 type Component struct {
 	Common `yaml:",inline"`
 
-	EKS           *EKSConfig        `yaml:"eks,omitempty"`
-	Kind          *ComponentKind    `yaml:"kind,omitempty"`
-	ModuleSource  *string           `yaml:"module_source,omitempty"`
-	ModuleName    *string           `yaml:"module_name,omitempty"`
-	ModuleForEach *string           `yaml:"module_for_each,omitempty"`
-	ProvidersMap  map[string]string `yaml:"module_providers,omitempty"`
-	Variables     []string          `yaml:"variables,omitempty"`
-	Outputs       []string          `yaml:"outputs,omitempty"`
-	Modules       []ComponentModule `yaml:"modules,omitempty"`
+	EKS             *EKSConfig        `yaml:"eks,omitempty"`
+	Kind            *ComponentKind    `yaml:"kind,omitempty"`
+	ModuleSource    *string           `yaml:"module_source,omitempty"`
+	ModuleName      *string           `yaml:"module_name,omitempty"`
+	ModuleForEach   *string           `yaml:"module_for_each,omitempty"`
+	ModuleDependsOn []string          `yaml:"module_depends_on,omitempty"`
+	ProvidersMap    map[string]string `yaml:"module_providers,omitempty"`
+	Variables       []string          `yaml:"variables,omitempty"`
+	Outputs         []string          `yaml:"outputs,omitempty"`
+	Modules         []ComponentModule `yaml:"modules,omitempty"`
 }
 
 type ComponentModule struct {
@@ -260,7 +261,7 @@ type ComponentModule struct {
 	ProvidersMap map[string]string `yaml:"providers,omitempty"`
 	// For Each metadata argument https://developer.hashicorp.com/terraform/language/modules/syntax#meta-arguments
 	ForEach *string `yaml:"for_each,omitempty"`
-	//
+	// Dependencies of this module
 	DependsOn []string `yaml:"depends_on,omitempty"`
 }
 
