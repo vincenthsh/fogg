@@ -20,8 +20,8 @@ provider "sops" {}
 provider "bar" {
 }
 provider "baz" {
-  assume_role = "arn:aws:iam::0000000000000000:role/TerraformExecutionRole"
-  baz_token   = "prod_token_arn"
+  aws_assume_role = "TerraformExecutionRole"
+  baz_token       = "prod_token_arn"
 }
 provider "foo" {
   foo_host = "prod"
