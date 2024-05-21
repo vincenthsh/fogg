@@ -835,7 +835,7 @@ func resolveGenericProvider(
 			}
 		}
 	}
-	if requiresRegion {
+	if requiresRegion && config["region"] == nil {
 		// inherit resolved awsConfig region and accountID
 		// TODO: handle additionalRegions/additionalProvider configuration?
 		config["region"] = *awsConfig.Region
