@@ -818,6 +818,7 @@ func resolveGenericProvider(
 			if key == "assume_role" {
 				tmp := fmt.Sprintf("arn:aws:iam::%s:role/%s", *awsConfig.AccountID, value)
 				config["assume_role"] = map[string]string{"role_arn": tmp}
+				config["region"] = *awsConfig.Region
 			} else {
 				config[key] = value
 			}
