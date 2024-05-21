@@ -20,8 +20,12 @@ provider "sops" {}
 provider "bar" {
 }
 provider "baz" {
-  aws_assume_role = "TerraformExecutionRole"
-  baz_token       = "prod_token_arn"
+  assume_role = {
+    role_arn     = "arn:aws:iam::0000000000000000:role/TerraformExecutionRole"
+    session_name = "foo"
+  }
+  baz_token = "prod_token_arn"
+  region    = "ap-southeast-1"
 }
 provider "foo" {
   foo_host = "prod"

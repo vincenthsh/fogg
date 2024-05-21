@@ -810,19 +810,35 @@ func resolveGenericProvider(
 	if p.Enabled != nil {
 		enabled = *p.Enabled
 	}
+	// special assume role config block handling
+	assumeRoleBlock := make(map[string]string)
+	setAssumeRoleBlock := false
 	for key, value := range p.Config {
 		if value == nil {
 			delete(config, key)
 		} else {
-			// specially for AWS associate assume role
-			if key == "assume_role" {
-				tmp := fmt.Sprintf("arn:aws:iam::%s:role/%s", *awsConfig.AccountID, value)
-				config["assume_role"] = map[string]string{"role_arn": tmp}
-				config["region"] = *awsConfig.Region
-			} else {
+			switch key {
+			case "assume_role":
+				setAssumeRoleBlock = true
+				// build assume_role_block
+				// ref: https://registry.terraform.io/providers/hashicorp/awscc/latest/docs#assume-role
+				// ValidateAWSProvider should ensure AccountID is not nil
+				assumeRoleBlock["role_arn"] = fmt.Sprintf("arn:aws:iam::%s:role/%s", *awsConfig.AccountID, value)
+			// TODO: is it ok that these are ignored unless `assume_role` key is defined?
+			case "session_name":
+				fallthrough
+			case "external_id":
+				assumeRoleBlock[key] = value.(string)
+			default:
 				config[key] = value
 			}
 		}
+	}
+	if setAssumeRoleBlock {
+		// inherit resolved awsConfig region and accountID
+		// TODO: handle additionalRegions/additionalProvider configuration?
+		config["region"] = *awsConfig.Region
+		config["assume_role"] = assumeRoleBlock
 	}
 	return source, customProvider, version, enabled
 }

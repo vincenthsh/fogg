@@ -48,7 +48,8 @@ envs:
         custom_provider: false
         config:
           baz_token: prod_token_arn
-          aws_assume_role: "TerraformExecutionRole"
+          assume_role: "TerraformExecutionRole"
+          session_name: "foo"
     components:
       network: {}
   stg:
