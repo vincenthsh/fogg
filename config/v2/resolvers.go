@@ -817,7 +817,7 @@ func resolveGenericProvider(
 			// specially for AWS associate assume role
 			if key == "assume_role" {
 				tmp := fmt.Sprintf("arn:aws:iam::%s:role/%s", *awsConfig.AccountID, value)
-				config["assume_role"] = tmp
+				config["assume_role"] = map[string]string{"role_arn": tmp}
 			} else {
 				config[key] = value
 			}
