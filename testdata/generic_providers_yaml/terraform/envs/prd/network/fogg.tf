@@ -31,6 +31,13 @@ provider "foo" {
   foo_host = "prod"
   foo_tls  = true
 }
+provider "fred" {
+  assume_role = {
+    role_arn     = "arn:aws:iam::1111111111111111:role/TerraformExecutionRole"
+    session_name = "foo"
+  }
+  region = "ap-southeast-1"
+}
 terraform {
   required_version = "=1.1.1"
 
@@ -69,6 +76,10 @@ terraform {
     foo = {
       source  = "czi/foo"
       version = "~> 0.2"
+    }
+    fred = {
+      source  = "czi/bar"
+      version = "~> 0.1.0"
     }
     local = {
       source  = "hashicorp/local"

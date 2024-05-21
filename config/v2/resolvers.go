@@ -811,34 +811,34 @@ func resolveGenericProvider(
 		enabled = *p.Enabled
 	}
 	// special assume role config block handling
-	assumeRoleBlock := make(map[string]string)
-	setAssumeRoleBlock := false
+	// if assume_role map is provided, add region
+	requiresRegion := false
 	for key, value := range p.Config {
 		if value == nil {
 			delete(config, key)
 		} else {
 			switch key {
 			case "assume_role":
-				setAssumeRoleBlock = true
 				// build assume_role_block
 				// ref: https://registry.terraform.io/providers/hashicorp/awscc/latest/docs#assume-role
 				// ValidateAWSProvider should ensure AccountID is not nil
-				assumeRoleBlock["role_arn"] = fmt.Sprintf("arn:aws:iam::%s:role/%s", *awsConfig.AccountID, value)
-			// TODO: is it ok that these are ignored unless `assume_role` key is defined?
-			case "session_name":
-				fallthrough
-			case "external_id":
-				assumeRoleBlock[key] = value.(string)
+				// GenericProvider.Validate ensures can cast and "role" key exists
+				valueMap := value.(map[string]any)
+				if valueMap["role_arn"] == nil {
+					valueMap["role_arn"] = fmt.Sprintf("arn:aws:iam::%s:role/%s", *awsConfig.AccountID, valueMap["role"])
+					delete(valueMap, "role")
+				}
+				config[key] = valueMap
+				requiresRegion = true
 			default:
 				config[key] = value
 			}
 		}
 	}
-	if setAssumeRoleBlock {
+	if requiresRegion {
 		// inherit resolved awsConfig region and accountID
 		// TODO: handle additionalRegions/additionalProvider configuration?
 		config["region"] = *awsConfig.Region
-		config["assume_role"] = assumeRoleBlock
 	}
 	return source, customProvider, version, enabled
 }
