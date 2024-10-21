@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.92.10](https://github.com/vincenthsh/fogg/compare/v0.92.9...v0.92.10) (2024-10-21)
+
+
+### Misc
+
+* bump github.com/tkrajina/typescriptify-golang-structs ([#342](https://github.com/vincenthsh/fogg/issues/342)) ([b62d1e5](https://github.com/vincenthsh/fogg/commit/b62d1e59ea5711f8f250d6093e300fe50354680e))
+
 ## [0.92.9](https://github.com/vincenthsh/fogg/compare/v0.92.8...v0.92.9) (2024-10-03)
 
 
