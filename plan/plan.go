@@ -64,6 +64,7 @@ type ComponentCommon struct {
 
 	CdktfDependencies    map[string]string `yaml:"cdktf_dependencies"`
 	CdktfDevDependencies map[string]string `yaml:"cdktf_dev_dependencies"`
+	PackageJsonFields    map[string]any    `yaml:"package_fields"`
 
 	TfLint TfLint `yaml:"tf_lint"`
 
@@ -577,10 +578,7 @@ func (p *Plan) buildAccounts(c *v2.Config) map[string]Account {
 func (p *Plan) buildModules(c *v2.Config) map[string]Module {
 	modulePlans := make(map[string]Module, len(c.Modules))
 	for name, conf := range c.Modules {
-		packageName := name
-		if conf.PackageName != nil {
-			packageName = *conf.PackageName
-		}
+		packageName := resolveModulePackageName(name, conf)
 		publish := false
 		if conf.Publish != nil {
 			publish = *conf.Publish
@@ -601,13 +599,12 @@ func (p *Plan) buildModules(c *v2.Config) map[string]Module {
 			"constructs": "^10.4.0",
 		}
 		modulePlan.CdktfDevDependencies = map[string]string{
-			"@swc/core":           "^1.10.12",
 			"@types/node":         "^20.17.16",
 			"constructs":          "^10.4.0",
 			"cdktf":               "^0.20.11",
 			"cdktf-cli":           "^0.20.11", // required to run cdktf get
 			"cdktf-vitest":        "^0.1.2",   // https://github.com/duniul/cdktf-vitest
-			"ts-node":             "^10.9.2",
+			"tsx":                 "^4.19.2",  // https://github.com/privatenumber/tsx/releases
 			"typescript":          "^5.7.3",
 			"vitest":              "^2.1.8", // https://github.com/vitest-dev/vitest/releases
 			"@vitest/coverage-v8": "^2.1.8",
@@ -637,6 +634,13 @@ func (p *Plan) buildModules(c *v2.Config) map[string]Module {
 		modulePlans[name] = modulePlan
 	}
 	return modulePlans
+}
+
+func resolveModulePackageName(moduleName string, conf v2.Module) string {
+	if conf.PackageName != nil {
+		return *conf.PackageName
+	}
+	return moduleName
 }
 
 func newEnvPlan() Env {
@@ -725,10 +729,9 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				"constructs":                     "^10.4.0",
 			}
 			componentPlan.CdktfDevDependencies = map[string]string{
-				"@swc/core":   "^1.10.12",
 				"@types/node": "^20.17.16",
 				"cdktf-cli":   "^0.20.11", // required to run `cdktf get``
-				"ts-node":     "^10.9.2",
+				"tsx":         "^4.19.2",  // https://github.com/privatenumber/tsx/releases
 				"typescript":  "^5.7.3",
 				// eslint/prettier v9
 				"@types/eslint-config-prettier":    "^6.11.3",
@@ -744,7 +747,7 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				"prettier":                         "^3.4.2",
 			}
 			if componentConf.Kind.GetOrDefault() == v2.ComponentKindTerraConstruct {
-				componentPlan.CdktfDependencies["terraconstructs"] = "^0.0.9"
+				componentPlan.CdktfDependencies["terraconstructs"] = "^0.0.11"
 			}
 
 			for _, dep := range componentConf.CdktfDependencies {
@@ -753,6 +756,10 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 
 			for _, dep := range componentConf.CdktfDevDependencies {
 				componentPlan.CdktfDevDependencies[dep.Name] = dep.Version
+			}
+
+			for key, value := range componentConf.PackageJsonFields {
+				componentPlan.PackageJsonFields[key] = value
 			}
 
 			if !envConf.NoGlobal {
@@ -783,6 +790,9 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				for k, v := range componentBackends {
 					if util.SliceContainsString(componentRemoteStates, k) {
 						filtered[k] = v
+						// add filtered ComponentBackends as pnpm workspace dependencies
+						remoteKey := fmt.Sprintf("%s-%s", envName, k)
+						c.CdktfDependencies[remoteKey] = "workspace:*"
 					}
 				}
 			} else {
@@ -1418,6 +1428,7 @@ func resolveComponentCommon(commons ...v2.Common) ComponentCommon {
 		TravisCI:            travisPlan,
 		CircleCI:            circlePlan,
 		GitHubActionsCI:     githubActionsPlan,
+		PackageJsonFields:   make(map[string]any, 0),
 	}
 }
 

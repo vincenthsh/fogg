@@ -1,5 +1,5 @@
 {
-  "name": "my-cdktf-module-foo",
+  "name": "@myorg/module",
   "version": "0.0.0",
   "author": "foo@example.com",
   "main": "dist/index.js",
@@ -10,17 +10,16 @@
   "scripts": {
     "get": "cdktf get",
     "ca:login": "pnpm -w run ca:login",
-    "build": "if [ -d dist ]; then tsc --build -v; else tsc --build -v --force; fi",
-    "watch": "tsc --build --watch",
+    "build": "tsc",
+    "watch": "tsc --watch",
     "lint": "eslint",
     "test": "vitest run --passWithNoTests  --coverage",
     "prettier": "prettier --write .",
-    "type-check": "tsc -p ./tsconfig.json --noEmit",
+    "type-check": "tsc --noEmit",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist && rm -rf coverage"
   },
   "dependencies":  {},
   "devDependencies":  {
-    "@swc/core": "^1.10.12",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/node": "^20.17.16",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
@@ -37,7 +36,7 @@
     "eslint-plugin-turbo": "^2.3.4",
     "globals": "^15.14.0",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.22.0",
     "unplugin-swc": "^1.5.1",

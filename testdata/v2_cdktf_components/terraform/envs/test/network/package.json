@@ -2,14 +2,15 @@
   "name": "test-network",
   "author": "foo@example.com",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "get": "cdktf get",
     "ca:login": "pnpm -w run ca:login",
     "lint": "eslint",
     "prettier": "prettier --write .",
-    "synth": "npx ts-node --swc -P ./tsconfig.json src/index.ts",
-    "type-check": "tsc -p ./tsconfig.json --noEmit",
+    "synth": "tsx src/index.ts",
+    "type-check": "tsc --noEmit",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist && rm -rf coverage"
   },
   "dependencies":   {
@@ -21,7 +22,6 @@
     "constructs": "^10.4.0"
   },
   "devDependencies":   {
-    "@swc/core": "^1.10.12",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/node": "^20.17.16",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
@@ -34,7 +34,7 @@
     "eslint-plugin-turbo": "^2.3.4",
     "globals": "^15.14.0",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.22.0"
   },
