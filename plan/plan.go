@@ -599,12 +599,13 @@ func (p *Plan) buildModules(c *v2.Config) map[string]Module {
 			"constructs": "^10.4.0",
 		}
 		modulePlan.CdktfDevDependencies = map[string]string{
+			"@swc/core":           "^1.10.12",
 			"@types/node":         "^20.17.16",
 			"constructs":          "^10.4.0",
 			"cdktf":               "^0.20.11",
 			"cdktf-cli":           "^0.20.11", // required to run cdktf get
 			"cdktf-vitest":        "^0.1.2",   // https://github.com/duniul/cdktf-vitest
-			"tsx":                 "^4.19.2",  // https://github.com/privatenumber/tsx/releases
+			"ts-node":             "^10.9.2",
 			"typescript":          "^5.7.3",
 			"vitest":              "^2.1.8", // https://github.com/vitest-dev/vitest/releases
 			"@vitest/coverage-v8": "^2.1.8",
@@ -729,9 +730,10 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				"constructs":                     "^10.4.0",
 			}
 			componentPlan.CdktfDevDependencies = map[string]string{
+				"@swc/core":   "^1.10.12",
 				"@types/node": "^20.17.16",
 				"cdktf-cli":   "^0.20.11", // required to run `cdktf get``
-				"tsx":         "^4.19.2",  // https://github.com/privatenumber/tsx/releases
+				"ts-node":     "^10.9.2",
 				"typescript":  "^5.7.3",
 				// eslint/prettier v9
 				"@types/eslint-config-prettier":    "^6.11.3",

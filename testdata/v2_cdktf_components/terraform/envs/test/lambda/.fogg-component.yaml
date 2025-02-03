@@ -114,6 +114,7 @@ cdktf_dependencies:
     iam-floyd: ^0.507.0
     test-network: workspace:*
 cdktf_dev_dependencies:
+    '@swc/core': ^1.10.12
     '@types/eslint-config-prettier': ^6.11.3
     '@types/node': ^20.17.16
     '@typescript-eslint/eslint-plugin': ^8.22.0
@@ -126,7 +127,7 @@ cdktf_dev_dependencies:
     eslint-plugin-turbo: ^2.3.4
     globals: ^15.14.0
     prettier: ^3.4.2
-    tsx: ^4.19.2
+    ts-node: ^10.9.2
     typescript: ^5.7.3
     typescript-eslint: ^8.22.0
 package_fields: {}
