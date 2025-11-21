@@ -38,6 +38,7 @@ envs:
         grid:
           enabled: true
           guid: "11111111-2222-3333-4444-555555555555"
+          project: foo
         modules:
           - name: "vpc"
             source: "terraform-aws-modules/vpc/aws"

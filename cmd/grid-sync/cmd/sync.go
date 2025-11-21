@@ -24,7 +24,7 @@ var syncCmd = &cobra.Command{
 			return err
 		}
 
-		markers, err := ScanMarkers(cwd)
+		markers, err := ScanMarkers(cwd, excludeDirs)
 		if err != nil {
 			return err
 		}
@@ -51,8 +51,17 @@ var syncCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Synchronizing %d markers to %s...\n", len(markers), session.ServerURL)
+
+		// First pass: Create/update all states (without dependencies)
 		for _, marker := range markers {
-			if err := syncMarker(ctx, client, marker); err != nil {
+			if err := syncMarkerState(ctx, client, marker); err != nil {
+				return err
+			}
+		}
+
+		// Second pass: Sync all dependencies (now that all states exist)
+		for _, marker := range markers {
+			if err := syncMarkerDependencies(ctx, client, marker); err != nil {
 				return err
 			}
 		}
@@ -62,9 +71,9 @@ var syncCmd = &cobra.Command{
 	},
 }
 
-func syncMarker(ctx context.Context, client *sdk.Client, marker LoadedMarker) error {
+// syncMarkerState creates or updates the state and its labels (but not dependencies)
+func syncMarkerState(ctx context.Context, client *sdk.Client, marker LoadedMarker) error {
 	desiredLabels := markerLabelsToLabelMap(marker.Marker.Labels)
-	desiredDeps := marker.Marker.Dependencies
 
 	info, err := client.GetStateInfo(ctx, sdk.StateReference{GUID: marker.Marker.GUID})
 	if err != nil {
@@ -91,6 +100,7 @@ func syncMarker(ctx context.Context, client *sdk.Client, marker LoadedMarker) er
 	adds, removals := diffLabels(info.Labels, desiredLabels)
 	if len(adds) == 0 && len(removals) == 0 {
 		fmt.Printf("[noop-labels] guid=%s logicalId=%s\n", marker.Marker.GUID, marker.Marker.LogicalID)
+		return nil
 	}
 
 	_, err = client.UpdateStateLabels(ctx, sdk.UpdateStateLabelsInput{
@@ -103,12 +113,22 @@ func syncMarker(ctx context.Context, client *sdk.Client, marker LoadedMarker) er
 	}
 
 	fmt.Printf("[labels] guid=%s adds=%d removals=%d\n", info.State.GUID, len(adds), len(removals))
+	return nil
+}
 
-	if err := syncDependencies(ctx, client, marker, info, desiredDeps); err != nil {
+// syncMarkerDependencies syncs dependency edges for a state
+func syncMarkerDependencies(ctx context.Context, client *sdk.Client, marker LoadedMarker) error {
+	desiredDeps, err := resolveMarkerDependencies(marker)
+	if err != nil {
 		return err
 	}
 
-	return nil
+	info, err := client.GetStateInfo(ctx, sdk.StateReference{GUID: marker.Marker.GUID})
+	if err != nil {
+		return fmt.Errorf("failed to fetch state guid=%s: %w", marker.Marker.GUID, err)
+	}
+
+	return syncDependencies(ctx, client, marker, info, desiredDeps)
 }
 
 func markerLabelsToLabelMap(labels map[string]string) sdk.LabelMap {

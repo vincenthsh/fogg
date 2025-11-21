@@ -34,3 +34,7 @@ data "terraform_remote_state" "vpc" {
 
   }
 }
+locals {
+  vpc_vpc_id             = data.terraform_remote_state.vpc.outputs.vpc_id
+  vpc_private_subnet_ids = data.terraform_remote_state.vpc.outputs.private_subnet_ids
+}

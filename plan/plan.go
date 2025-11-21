@@ -49,9 +49,11 @@ type ComponentCommon struct {
 	Common `yaml:",inline"`
 
 	AccountBackends       map[string]Backend         `yaml:"account_backends"`
+	AccountDependencies   v2.DependencyList          `yaml:"account_dependencies"`
 	Accounts              map[string]*json.Number    `yaml:"all_accounts"`
 	Backend               Backend                    `yaml:"backend"`
 	ComponentBackends     map[string]Backend         `yaml:"component_backends"`
+	ComponentDependencies v2.DependencyList          `yaml:"component_dependencies"`
 	AutoplanRelativeGlobs []string                   `yaml:"autoplan_relative_globs"`
 	AutoplanFiles         []string                   `yaml:"autoplan_files"`
 	LocalsBlock           map[string]any             `yaml:"locals_block"`
@@ -567,7 +569,10 @@ func (p *Plan) buildAccounts(fs afero.Fs, c *v2.Config) map[string]Account {
 			accountPlan.ComponentCommon.Backend.Remote.Workspace = fmt.Sprintf("accounts-%s", name)
 		} else if accountPlan.ComponentCommon.Backend.Kind == BackendKindHTTP {
 			// HTTP backend logic is handled in resolveComponentCommon, but set LogicalID here
-			accountPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-accounts-%s", accountPlan.ComponentCommon.Project, name)
+			gridConfig := v2.ResolveGrid(defaults.Common, acct.Common)
+			project := v2.ResolveLogicalIDProject(gridConfig, accountPlan.ComponentCommon.Project)
+			account := v2.ResolveLogicalIDAccount(gridConfig, name)
+			accountPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-accounts-%s", project, account)
 		} else {
 			panic(fmt.Sprintf("Invalid backend kind of %s", accountPlan.ComponentCommon.Backend.Kind))
 		}
@@ -599,6 +604,7 @@ func (p *Plan) buildAccounts(fs afero.Fs, c *v2.Config) map[string]Account {
 			filtered = accountBackends
 		}
 		a.AccountBackends = filtered
+		a.AccountDependencies = accountDependencies
 		accountPlans[name] = a
 	}
 
@@ -696,7 +702,9 @@ func (p *Plan) buildGlobal(fs afero.Fs, conf *v2.Config) Component {
 		componentPlan.ComponentCommon.Backend.Remote.Workspace = "global"
 	} else if componentPlan.ComponentCommon.Backend.Kind == BackendKindHTTP {
 		// HTTP backend logic is handled in resolveComponentCommon, but set LogicalID here
-		componentPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-global", componentPlan.ComponentCommon.Project)
+		gridConfig := v2.ResolveGrid(defaults.Common, global.Common)
+		project := v2.ResolveLogicalIDProject(gridConfig, componentPlan.ComponentCommon.Project)
+		componentPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-global", project)
 	}
 
 	componentPlan.Name = "global"
@@ -735,6 +743,7 @@ func (p *Plan) buildEnvs(fs afero.Fs, conf *v2.Config) (map[string]Env, error) {
 				}
 			}
 			componentPlan.AccountBackends = accountBackends
+			componentPlan.AccountDependencies = accountDependencies
 
 			componentPlan.Accounts = resolveAccounts(conf.Accounts)
 
@@ -744,7 +753,10 @@ func (p *Plan) buildEnvs(fs afero.Fs, conf *v2.Config) (map[string]Env, error) {
 				componentPlan.ComponentCommon.Backend.Remote.Workspace = fmt.Sprintf("%s-%s", envName, componentName)
 			} else if componentPlan.ComponentCommon.Backend.Kind == BackendKindHTTP {
 				// HTTP backend logic is handled in resolveComponentCommon, but set LogicalID here
-				componentPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-%s-%s", componentPlan.ComponentCommon.Project, envName, componentName)
+				gridConfig := v2.ResolveGrid(defaults.Common, envConf.Common, componentConf.Common)
+				project := v2.ResolveLogicalIDProject(gridConfig, componentPlan.ComponentCommon.Project)
+				env := v2.ResolveLogicalIDEnv(gridConfig, envName)
+				componentPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-%s-%s", project, env, componentName)
 			} else {
 				panic(fmt.Sprintf("Invalid backend kind of %s", componentPlan.ComponentCommon.Backend.Kind))
 			}
@@ -842,6 +854,7 @@ func (p *Plan) buildEnvs(fs afero.Fs, conf *v2.Config) (map[string]Env, error) {
 			}
 
 			c.ComponentBackends = filtered
+			c.ComponentDependencies = componentDependencies
 			c.AutoplanRelativeGlobs = v2.ResolveOptionalStringSlice(v2.DependsOnRelativeGlobsGetter, defaults.Common, envConf.Common, componentConf.Common)
 			c.AutoplanFiles = v2.ResolveOptionalStringSlice(v2.DependsOnFilesGetter, defaults.Common, envConf.Common, componentConf.Common)
 			c.LocalsBlock = make(map[string]any)

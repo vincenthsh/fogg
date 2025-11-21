@@ -13,6 +13,7 @@ type options struct {
 }
 
 var opts options
+var excludeDirs []string
 
 var rootCmd = &cobra.Command{
 	Use:   "grid-sync",
@@ -38,4 +39,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&opts.serverURL, "server", envDefault("GRID_API_URL", ""), "Grid API base URL (or use GRID_API_URL)")
 	rootCmd.PersistentFlags().StringVar(&opts.clientID, "client-id", envDefault("GRID_CLIENT_ID", ""), "Grid service account client ID (or use GRID_CLIENT_ID)")
 	rootCmd.PersistentFlags().StringVar(&opts.clientSecret, "client-secret", envDefault("GRID_CLIENT_SECRET", ""), "Grid service account client secret (or use GRID_CLIENT_SECRET)")
+	rootCmd.PersistentFlags().StringSliceVar(&excludeDirs, "exclude-dirs", []string{"node_modules", ".terraform", ".git", "dist", "build", "target", ".next", ".turbo"}, "Directory names to exclude from scanning")
 }

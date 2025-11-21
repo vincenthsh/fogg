@@ -253,6 +253,12 @@ type GridConfig struct {
 	Enabled  *bool   `yaml:"enabled,omitempty"`
 	GUID     *string `yaml:"guid,omitempty"`
 	Endpoint *string `yaml:"endpoint,omitempty"`
+	// Optional: override project name for logical IDs
+	Project *string `yaml:"project,omitempty"`
+	// Optional: map env names to short aliases
+	EnvMap map[string]string `yaml:"env_map,omitempty"`
+	// Optional: map account names to short aliases
+	AccountMap map[string]string `yaml:"account_map,omitempty"`
 }
 
 type ComponentModule struct {

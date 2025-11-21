@@ -34,3 +34,29 @@ data "terraform_remote_state" "{{ $name }}" {
   }
 }
 {{ end }}
+
+{{ if $outer.ComponentDependencies }}
+{{ range $component := sortedKeys $outer.ComponentDependencies }}
+{{ $outputs := index $outer.ComponentDependencies $component }}
+{{ if $outputs }}
+locals {
+  {{- range $output := $outputs }}
+  {{ $component }}_{{ $output }} = data.terraform_remote_state.{{ $component }}.outputs.{{ $output }}
+  {{- end }}
+}
+{{ end }}
+{{ end }}
+{{ end }}
+
+{{ if $outer.AccountDependencies }}
+{{ range $account := sortedKeys $outer.AccountDependencies }}
+{{ $outputs := index $outer.AccountDependencies $account }}
+{{ if $outputs }}
+locals {
+  {{- range $output := $outputs }}
+  {{ $account }}_{{ $output }} = data.terraform_remote_state.{{ $account }}.outputs.{{ $output }}
+  {{- end }}
+}
+{{ end }}
+{{ end }}
+{{ end }}

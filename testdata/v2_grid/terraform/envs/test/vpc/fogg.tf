@@ -98,7 +98,7 @@ variable "tags" {
     env        = "test"
     service    = "vpc"
     owner      = "foo@example.com"
-    tfstateKey = "proj-test-vpc"
+    tfstateKey = "foo-test-vpc"
     managedBy  = "terraform"
   }
 }
