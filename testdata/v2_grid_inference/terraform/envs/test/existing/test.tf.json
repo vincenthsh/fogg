@@ -1,0 +1,12 @@
+{
+  "resource": {
+    "aws_instance": {
+      "web": {
+        "ami": "${data.terraform_remote_state.images.outputs.ami_id}",
+        "tags": {
+          "Name": "web-${data.terraform_remote_state.vpc.outputs.vpc_name}"
+        }
+      }
+    }
+  }
+}

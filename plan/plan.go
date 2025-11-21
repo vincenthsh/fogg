@@ -7,8 +7,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/chanzuckerberg/fogg/config/markers"
 	v2 "github.com/chanzuckerberg/fogg/config/v2"
 	"github.com/chanzuckerberg/fogg/errs"
 	"github.com/chanzuckerberg/fogg/util"
@@ -18,9 +20,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	yaml "gopkg.in/yaml.v3"
-
-	"github.com/chanzuckerberg/fogg/config/markers"
-	"github.com/google/uuid"
 )
 
 // Plan represents a set of actions to take
@@ -1431,33 +1430,36 @@ func resolveComponentCommon(fs afero.Fs, path string, commons ...v2.Common) Comp
 		}
 		endpoint := *gridConf.Endpoint
 
+		// Resolve GUID for backend configuration
+		// Priority: 1) explicit config, 2) existing marker file, 3) generate new and write marker
 		guid := ""
 		if gridConf.GUID != nil && *gridConf.GUID != "" {
 			guid = *gridConf.GUID
 		} else {
-			// Try to load from marker
+			// Try to load from existing marker file
 			markerPath := filepath.Join(path, ".grid-state.yaml")
-			exists, err := afero.Exists(fs, markerPath)
-			if err == nil && exists {
-				m, err := markers.LoadMarker(markerPath)
-				if err == nil && m.GUID != "" {
-					guid = m.GUID
-				}
+			if m, err := markers.LoadMarkerFS(fs, markerPath); err == nil && m.GUID != "" {
+				guid = m.GUID
 			}
-			// If still empty, generate new v7 UUID
+			// If still empty (new component with no marker), generate and write marker now
+			// This ensures the GUID is available for backend config AND for applyGrid
 			if guid == "" {
 				newUUID, err := uuid.NewV7()
 				if err != nil {
 					panic(fmt.Sprintf("failed to generate UUID v7: %v", err))
 				}
 				guid = newUUID.String()
+
+				// Write a minimal marker file now so applyGrid can read it
+				// applyGrid will update it with proper logicalId and dependencies
+				marker := &markers.Marker{
+					GUID: guid,
+				}
+				_ = markers.SaveMarkerFS(fs, markerPath, marker)
 			}
 		}
-
-		// Update the Grid config with the resolved GUID so it can be used by applyGrid
-		if gridConf.GUID == nil || *gridConf.GUID == "" {
-			gridConf.GUID = &guid
-		}
+		// Note: We intentionally do NOT mutate gridConf.GUID.
+		// The GUID is stored in the marker file and will be read by applyGrid.
 
 		backend = Backend{
 			Kind: BackendKindHTTP,
