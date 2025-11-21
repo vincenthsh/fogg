@@ -11,7 +11,6 @@ import (
 	"github.com/chanzuckerberg/fogg/util"
 	"github.com/google/uuid"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v3"
 )
 
 func applyGrid(fs afero.Fs, conf *v2.Config, p *plan.Plan) error {
@@ -41,7 +40,8 @@ func resolveGridGUIDs(fs afero.Fs, p *plan.Plan) (map[string]string, error) {
 	// Envs
 	for envName, env := range p.Envs {
 		for compName, comp := range env.Components {
-			if comp.Grid != nil && comp.Grid.Enabled != nil && *comp.Grid.Enabled {
+			enabled := comp.Grid != nil && comp.Grid.Enabled != nil && *comp.Grid.Enabled
+			if enabled {
 				path := fmt.Sprintf("%s/envs/%s/%s", util.RootPath, envName, compName)
 				guid, err := resolveGUID(fs, path, comp.Grid.GUID)
 				if err != nil {
@@ -67,12 +67,8 @@ func resolveGUID(fs afero.Fs, path string, override *string) (string, error) {
 	}
 
 	if exists {
-		data, err := afero.ReadFile(fs, markerPath)
+		m, err := markers.LoadMarkerFS(fs, markerPath)
 		if err != nil {
-			return "", err
-		}
-		var m markers.Marker
-		if err := yaml.Unmarshal(data, &m); err != nil {
 			return "", err
 		}
 		if m.GUID != "" {
@@ -231,7 +227,7 @@ func getOutputsForDependency(depList v2.DependencyList, depName string) []string
 }
 
 func writeMarker(fs afero.Fs, path string, guid, logicalID string, deps []markers.Dependency) error {
-	marker := markers.Marker{
+	marker := &markers.Marker{
 		GUID:         guid,
 		LogicalID:    logicalID,
 		Dependencies: deps,
@@ -241,11 +237,6 @@ func writeMarker(fs afero.Fs, path string, guid, logicalID string, deps []marker
 		},
 	}
 
-	data, err := yaml.Marshal(marker)
-	if err != nil {
-		return err
-	}
-
 	markerPath := filepath.Join(path, ".grid-state.yaml")
-	return afero.WriteFile(fs, markerPath, data, 0644)
+	return markers.SaveMarkerFS(fs, markerPath, marker)
 }

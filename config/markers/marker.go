@@ -2,9 +2,9 @@ package markers
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
+	"github.com/spf13/afero"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,7 +24,12 @@ type Dependency struct {
 
 // LoadMarker reads a Marker from the specified path.
 func LoadMarker(path string) (*Marker, error) {
-	data, err := os.ReadFile(path)
+	return LoadMarkerFS(afero.NewOsFs(), path)
+}
+
+// LoadMarkerFS reads a Marker from the specified path using the provided filesystem.
+func LoadMarkerFS(fs afero.Fs, path string) (*Marker, error) {
+	data, err := afero.ReadFile(fs, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read marker file: %w", err)
 	}
@@ -40,7 +45,13 @@ func LoadMarker(path string) (*Marker, error) {
 // SaveMarker writes a Marker to the specified path.
 // It creates the directory if it doesn't exist.
 func SaveMarker(path string, marker *Marker) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+	return SaveMarkerFS(afero.NewOsFs(), path, marker)
+}
+
+// SaveMarkerFS writes a Marker to the specified path using the provided filesystem.
+// It creates the directory if it doesn't exist.
+func SaveMarkerFS(fs afero.Fs, path string, marker *Marker) error {
+	if err := fs.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -49,7 +60,7 @@ func SaveMarker(path string, marker *Marker) error {
 		return fmt.Errorf("failed to marshal marker: %w", err)
 	}
 
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := afero.WriteFile(fs, path, data, 0644); err != nil {
 		return fmt.Errorf("failed to write marker file: %w", err)
 	}
 

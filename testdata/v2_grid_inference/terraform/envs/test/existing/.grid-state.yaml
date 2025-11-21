@@ -1,0 +1,6 @@
+guid: 019aa5fe-90bc-721b-8e3d-dde5a72aba70
+logicalId: proj-test-existing
+labels:
+    managed_by: fogg
+dependencies:
+    - guid: 11111111-2222-3333-4444-555555555555

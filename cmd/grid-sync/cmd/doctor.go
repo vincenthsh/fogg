@@ -268,7 +268,7 @@ func previewDependencyChanges(info *sdk.StateInfo, marker LoadedMarker, desired 
 		if output == "" {
 			output = defaultOutput
 		}
-		key := depKey(guid, output, dep.Input)
+		key := depKey(guid, output)
 		desiredMap[key] = dep
 	}
 
@@ -293,7 +293,7 @@ func previewDependencyChanges(info *sdk.StateInfo, marker LoadedMarker, desired 
 		if output == "" {
 			output = defaultOutput
 		}
-		key := depKey(fromGUID, output, edge.ToInputName)
+		key := depKey(fromGUID, output)
 		existing[key] = edge
 	}
 

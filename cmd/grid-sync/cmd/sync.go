@@ -196,7 +196,7 @@ func syncDependencies(ctx context.Context, client *sdk.Client, marker LoadedMark
 		if output == "" {
 			output = defaultOutput
 		}
-		key := depKey(guid, output, dep.Input)
+		key := depKey(guid, output)
 		desiredMap[key] = dep
 	}
 
@@ -221,7 +221,7 @@ func syncDependencies(ctx context.Context, client *sdk.Client, marker LoadedMark
 		if output == "" {
 			output = defaultOutput
 		}
-		key := depKey(fromGUID, output, edge.ToInputName)
+		key := depKey(fromGUID, output)
 		existing[key] = edge
 	}
 
@@ -261,8 +261,8 @@ func syncDependencies(ctx context.Context, client *sdk.Client, marker LoadedMark
 	return nil
 }
 
-func depKey(fromGUID, output, input string) string {
-	return fromGUID + "|" + output + "|" + input
+func depKey(fromGUID, output string) string {
+	return fromGUID + "|" + output
 }
 
 func init() {
