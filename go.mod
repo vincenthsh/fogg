@@ -10,7 +10,6 @@ require (
 	github.com/antzucaro/matchr v0.0.0-20191224151129-ab6ba461ddec
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/chanzuckerberg/go-misc v1.11.1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/fatih/color v1.18.0
@@ -81,6 +80,7 @@ require (
 	github.com/aws/smithy-go v1.22.3 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bmatcuk/doublestar v1.2.4 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.9.1 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect

@@ -237,7 +237,7 @@ func writeMarker(fs afero.Fs, path string, guid, logicalID string, deps []marker
 		Dependencies: deps,
 		// Labels? We can add basic labels like "managed-by: fogg"
 		Labels: map[string]string{
-			"managed-by": "fogg",
+			"managed_by": "fogg",
 		},
 	}
 

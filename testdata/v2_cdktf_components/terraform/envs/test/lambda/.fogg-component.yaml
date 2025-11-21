@@ -1,6 +1,7 @@
 path_to_repo_root: ../../../../
 terraform_version: 1.7.5
 account_backends: {}
+account_dependencies: {}
 all_accounts: {}
 backend:
     kind: s3
@@ -25,6 +26,8 @@ component_backends:
             profile: null
             region: us-west-2
             role_arn: arn:aws:iam::123456789012:role/role
+component_dependencies:
+    network: []
 autoplan_relative_globs: []
 autoplan_files: []
 locals_block: {}
@@ -173,6 +176,7 @@ global:
     path_to_repo_root: ../../
     terraform_version: 1.7.5
     account_backends: {}
+    account_dependencies: {}
     all_accounts: {}
     backend:
         kind: s3
@@ -186,6 +190,7 @@ global:
             region: us-west-2
             role_arn: arn:aws:iam::123456789012:role/role
     component_backends: {}
+    component_dependencies: {}
     autoplan_relative_globs: []
     autoplan_files: []
     locals_block: {}
