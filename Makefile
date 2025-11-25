@@ -53,7 +53,7 @@ TEMPLATES := $(shell find templates -not -name "*.go")
 
 build: fmt ## build the binary
 	go build ${LDFLAGS} -o fogg ./cmd/fogg
-	go build ${LDFLAGS} -o grid-sync ./cmd/grid-sync
+	go build ${LDFLAGS} -o gridops ./cmd/gridops
 .PHONY: build
 
 coverage: ## run the go coverage tool, reading file coverage.out
@@ -85,7 +85,7 @@ test-coverage: ## run the test with proper coverage reporting
 
 install: ## install the fogg binary in $GOPATH/bin
 	go install ${LDFLAGS} ./cmd/fogg
-	go install ${LDFLAGS} ./cmd/grid-sync
+	go install ${LDFLAGS} ./cmd/gridops
 .PHONY: install
 
 help: ## display help for this makefile
