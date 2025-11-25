@@ -2,12 +2,15 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/terraconstructs/grid/pkg/sdk"
 )
 
@@ -106,4 +109,94 @@ func isAuthDisabledError(err error) bool {
 	}
 	msg := err.Error()
 	return strings.Contains(msg, "server returned 404") || strings.Contains(msg, "server returned 503")
+}
+
+// ServiceAccountKey represents the structure of a service account JSON file
+type ServiceAccountKey struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+}
+
+var (
+	serviceAccountPath string
+	outputTokenOnly    bool
+)
+
+var authCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Authenticate with Grid API and output credentials",
+	Long: `Authenticate with Grid API using service account credentials and output access token.
+This command is useful for integrating with tools like Atlantis that need to authenticate programmatically.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+
+		// Determine credentials source
+		var clientID, clientSecret string
+
+		if serviceAccountPath != "" {
+			// Read from service account JSON file
+			data, err := os.ReadFile(serviceAccountPath)
+			if err != nil {
+				return fmt.Errorf("failed to read service account file: %w", err)
+			}
+
+			var sa ServiceAccountKey
+			if err := json.Unmarshal(data, &sa); err != nil {
+				return fmt.Errorf("failed to parse service account JSON: %w", err)
+			}
+
+			clientID = sa.ClientID
+			clientSecret = sa.ClientSecret
+		} else {
+			// Use flags/environment variables
+			clientID = opts.clientID
+			clientSecret = opts.clientSecret
+		}
+
+		// Validate required fields
+		if opts.serverURL == "" {
+			return fmt.Errorf("server url is required (flag --server or GRID_API_URL)")
+		}
+		if clientID == "" || clientSecret == "" {
+			return fmt.Errorf("client credentials are required (flags --client-id/--client-secret, --service-account file, or GRID_CLIENT_ID/GRID_CLIENT_SECRET)")
+		}
+
+		// Discover auth config
+		authCfg, err := sdk.DiscoverAuthConfig(ctx, opts.serverURL)
+		if err != nil {
+			if isAuthDisabledError(err) {
+				return fmt.Errorf("authentication is disabled on the Grid API server")
+			}
+			return fmt.Errorf("failed to discover auth config: %w", err)
+		}
+
+		issuer := authCfg.Issuer
+		if issuer == "" {
+			issuer = opts.serverURL
+		}
+
+		// Authenticate and get token
+		creds, err := sdk.LoginWithServiceAccount(ctx, issuer, clientID, clientSecret)
+		if err != nil {
+			return fmt.Errorf("authentication failed: %w", err)
+		}
+
+		if outputTokenOnly {
+			// Output only the token for easy integration with Atlantis
+			fmt.Println(creds.AccessToken)
+		} else {
+			// Output full credentials information
+			fmt.Printf("Successfully authenticated with Grid API\n")
+			fmt.Printf("Access Token: %s\n", creds.AccessToken)
+			fmt.Printf("Expires At: %s\n", creds.ExpiresAt.Format(time.RFC3339))
+		}
+
+		return nil
+	},
+}
+
+func init() {
+	authCmd.Flags().StringVar(&serviceAccountPath, "service-account", "", "Path to service account JSON file (with client_id and client_secret)")
+	authCmd.Flags().BoolVar(&outputTokenOnly, "token", false, "Output only the access token (useful for Atlantis integration)")
+	rootCmd.AddCommand(authCmd)
 }
