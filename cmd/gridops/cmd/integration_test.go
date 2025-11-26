@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -147,10 +148,10 @@ func TestGridOpsIntegration(t *testing.T) {
 			r.NoError(err)
 
 			snapshot := &APICallSnapshot{Calls: capturedCalls}
-
+			stdoutnormalized := normalizeStdout(projectRoot, stdout)
 			if *updateSnapshots {
 				r.NoError(saveSnapshot(snapshotPath, snapshot))
-				r.NoError(saveStdoutSnapshot(stdoutSnapshotPath, stdout))
+				r.NoError(saveStdoutSnapshot(stdoutSnapshotPath, stdoutnormalized))
 			} else {
 				expected, loadErr := loadSnapshot(snapshotPath)
 				if errors.Is(loadErr, os.ErrNotExist) {
@@ -164,7 +165,7 @@ func TestGridOpsIntegration(t *testing.T) {
 					t.Fatalf("stdout snapshot %s missing; run 'make update-gridops-snapshots'", stdoutSnapshotPath)
 				}
 				r.NoError(stdoutErr)
-				r.Equal(expectedStdout, stdout)
+				r.Equal(expectedStdout, stdoutnormalized)
 			}
 		})
 	}
@@ -307,6 +308,24 @@ func saveSnapshot(path string, snapshot *APICallSnapshot) error {
 	}
 
 	return os.WriteFile(path, data, 0o644)
+}
+func normalizeStdout(projectRoot, stdout string) string {
+	// make paths consistent across machines
+	normalized := strings.ReplaceAll(stdout, projectRoot, "<PROJECT_ROOT>")
+
+	lines := strings.Split(strings.TrimSpace(normalized), "\n")
+	var fixed, deps []string
+	for _, l := range lines {
+		if strings.HasPrefix(l, "[deps-") {
+			deps = append(deps, l)
+			continue
+		}
+		fixed = append(fixed, l)
+	}
+
+	sort.Strings(deps) // ordering of deps isn’t significant
+	normalizedLines := append(fixed, deps...)
+	return strings.Join(normalizedLines, "\n") + "\n"
 }
 
 func loadStdoutSnapshot(path string) (string, error) {

@@ -1,8 +1,8 @@
 Synchronizing 2 markers to https://grid.mock...
-[create] guid=019aa5fe-90bc-721b-8e3d-dde5a72aba70 logicalId=proj-test-existing (/Users/vincentdesmet/hsh/fogg/testdata/v2_grid_inference/terraform/envs/test/existing/.grid-state.yaml)
-[create] guid=11111111-2222-3333-4444-555555555555 logicalId=proj-test-vpc (/Users/vincentdesmet/hsh/fogg/testdata/v2_grid_inference/terraform/envs/test/vpc/.grid-state.yaml)
+[create] guid=019aa5fe-90bc-721b-8e3d-dde5a72aba70 logicalId=proj-test-existing (<PROJECT_ROOT>/testdata/v2_grid_inference/terraform/envs/test/existing/.grid-state.yaml)
+[create] guid=11111111-2222-3333-4444-555555555555 logicalId=proj-test-vpc (<PROJECT_ROOT>/testdata/v2_grid_inference/terraform/envs/test/vpc/.grid-state.yaml)
+✅ Sync complete
 [deps-add] guid=019aa5fe-90bc-721b-8e3d-dde5a72aba70 from=11111111-2222-3333-4444-555555555555 output=database_subnet_group input=
 [deps-add] guid=019aa5fe-90bc-721b-8e3d-dde5a72aba70 from=11111111-2222-3333-4444-555555555555 output=vpc_cidr_block input=
 [deps-add] guid=019aa5fe-90bc-721b-8e3d-dde5a72aba70 from=11111111-2222-3333-4444-555555555555 output=vpc_id input=
 [deps-add] guid=019aa5fe-90bc-721b-8e3d-dde5a72aba70 from=11111111-2222-3333-4444-555555555555 output=vpc_name input=
-✅ Sync complete
