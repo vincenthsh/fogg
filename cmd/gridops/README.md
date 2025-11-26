@@ -60,8 +60,99 @@ The `--token` flag ensures only the JWT token is printed to stdout, making it ea
 
 ### `gridops sync`
 
-Synchronize local marker files with the Grid API.
+Synchronize local `.grid-state.yaml` marker files with the Grid API. This command scans the current directory for marker files, validates them, and ensures the Grid API state matches your local configuration.
+
+#### What it does
+
+1. **Scans** for all `.grid-state.yaml` files in the current directory (excluding configured directories)
+2. **Validates** markers for duplicates, conflicts, and consistency issues
+3. **Creates or updates** states in the Grid API with their GUIDs and logical IDs
+4. **Synchronizes labels** on states (adds new labels, removes obsolete ones)
+5. **Manages dependencies** between states (adds missing edges, removes stale ones)
+
+The sync operates in two passes:
+- **First pass**: Creates/updates all states and their labels
+- **Second pass**: Synchronizes dependencies (ensures all referenced states exist first)
+
+#### Usage
+
+```bash
+# Sync all markers in current directory
+gridops sync
+
+# Sync with specific Grid server
+gridops sync --server https://grid.example.com
+
+# Sync with service account authentication
+gridops sync --client-id <id> --client-secret <secret>
+```
+
+#### Flags
+
+Inherits global flags:
+- `--server <url>`: Grid API base URL (or use `GRID_API_URL` environment variable)
+- `--client-id <id>`: Grid service account client ID (or use `GRID_CLIENT_ID`)
+- `--client-secret <secret>`: Grid service account client secret (or use `GRID_CLIENT_SECRET`)
+- `--exclude-dirs <dirs>`: Comma-separated list of directory names to exclude from scanning
 
 ### `gridops doctor`
 
-Diagnose issues with marker files and Grid API connectivity.
+Diagnose issues with marker files and preview what a sync would do without making changes. This is a validation and debugging tool that helps identify problems before running sync.
+
+#### What it does
+
+1. **Scans** for all `.grid-state.yaml` files in the current directory
+2. **Validates** markers for:
+   - Duplicate GUIDs
+   - Duplicate logical IDs
+   - Invalid marker formats
+3. **Checks dependencies**:
+   - Identifies dependencies with unspecified outputs
+   - Infers outputs from Terraform files when possible
+   - Reports which outputs will be used for each dependency
+4. **Previews Grid API changes** (with `--with-grid-preview`):
+   - Shows which states would be created
+   - Shows which labels would be added/removed
+   - Shows which dependencies would be added/removed
+   - **Does not modify anything** (dry-run mode)
+
+#### Usage
+
+```bash
+# Basic validation
+gridops doctor
+
+# Show detailed marker information
+gridops doctor -v
+
+# Show dependency resolution details
+gridops doctor -vv
+
+# Preview what sync would do (dry-run against Grid API)
+gridops doctor --with-grid-preview
+
+# Full diagnostic with Grid preview
+gridops doctor -vv --with-grid-preview
+```
+
+#### Flags
+
+- `-v, --verbose`: Show detailed marker information (GUIDs, logical IDs, labels, dependencies)
+- `-vv`: Show very verbose output including dependency resolution details
+- `--with-grid-preview`: Connect to Grid API and preview sync actions without making changes (dry-run)
+
+Inherits global flags:
+- `--server <url>`: Grid API base URL (required for `--with-grid-preview`)
+- `--client-id <id>`: Grid service account client ID
+- `--client-secret <secret>`: Grid service account client secret
+- `--exclude-dirs <dirs>`: Directory names to exclude from scanning
+
+#### Output Inference
+
+When dependencies in `.grid-state.yaml` don't specify which output to use, `gridops doctor` will:
+1. Scan the local Terraform files (`.tf`, `.tf.json`)
+2. Parse data source references like `data.terraform_remote_state.*.outputs.*`
+3. Infer which outputs are actually being consumed
+4. Report the inferred outputs
+
+This helps ensure your dependency configuration matches what Terraform is actually using.
