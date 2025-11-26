@@ -66,9 +66,10 @@ Synchronize local `.grid-state.yaml` marker files with the Grid API. This comman
 
 1. **Scans** for all `.grid-state.yaml` files in the current directory (excluding configured directories)
 2. **Validates** markers for duplicates, conflicts, and consistency issues
-3. **Creates or updates** states in the Grid API with their GUIDs and logical IDs
-4. **Synchronizes labels** on states (adds new labels, removes obsolete ones)
-5. **Manages dependencies** between states (adds missing edges, removes stale ones)
+3. **Resolves dependencies** using the shared dependency inference logic (see [Dependency Resolution](#dependency-resolution))
+4. **Creates or updates** states in the Grid API with their GUIDs and logical IDs
+5. **Synchronizes labels** on states (adds new labels, removes obsolete ones)
+6. **Manages dependencies** between states (adds missing edges, removes stale ones)
 
 The sync operates in two passes:
 - **First pass**: Creates/updates all states and their labels
@@ -97,7 +98,7 @@ Inherits global flags:
 
 ### `gridops doctor`
 
-Diagnose issues with marker files and preview what a sync would do without making changes. This is a validation and debugging tool that helps identify problems before running sync.
+Diagnose issues with marker files and preview what a sync would do **without making any changes**. This is a dry-run verification tool ideal for pre-commit hooks and CI/CD validation.
 
 #### What it does
 
@@ -106,9 +107,9 @@ Diagnose issues with marker files and preview what a sync would do without makin
    - Duplicate GUIDs
    - Duplicate logical IDs
    - Invalid marker formats
-3. **Checks dependencies**:
+3. **Resolves dependencies** using the shared dependency inference logic (see [Dependency Resolution](#dependency-resolution))
    - Identifies dependencies with unspecified outputs
-   - Infers outputs from Terraform files when possible
+   - Infers outputs from Terraform files
    - Reports which outputs will be used for each dependency
 4. **Previews Grid API changes** (with `--with-grid-preview`):
    - Shows which states would be created
@@ -116,10 +117,12 @@ Diagnose issues with marker files and preview what a sync would do without makin
    - Shows which dependencies would be added/removed
    - **Does not modify anything** (dry-run mode)
 
+**Use case:** Run `gridops doctor` in pre-commit hooks or CI pipelines to catch marker issues before they reach production.
+
 #### Usage
 
 ```bash
-# Basic validation
+# Basic validation (perfect for pre-commit hooks)
 gridops doctor
 
 # Show detailed marker information
@@ -147,12 +150,41 @@ Inherits global flags:
 - `--client-secret <secret>`: Grid service account client secret
 - `--exclude-dirs <dirs>`: Directory names to exclude from scanning
 
-#### Output Inference
+## Dependency Resolution
 
-When dependencies in `.grid-state.yaml` don't specify which output to use, `gridops doctor` will:
-1. Scan the local Terraform files (`.tf`, `.tf.json`)
-2. Parse data source references like `data.terraform_remote_state.*.outputs.*`
-3. Infer which outputs are actually being consumed
-4. Report the inferred outputs
+Both `gridops sync` and `gridops doctor` use the same dependency resolution logic to infer Terraform outputs from your codebase.
 
-This helps ensure your dependency configuration matches what Terraform is actually using.
+### How it works
+
+When dependencies in `.grid-state.yaml` don't specify which output to use, gridops will:
+
+1. **Scan local Terraform files** (`.tf`, `.tf.json`) in the marker's directory
+2. **Parse data source references** like `data.terraform_remote_state.*.outputs.*`
+3. **Infer which outputs** are actually being consumed by your Terraform code
+4. **Use the inferred outputs** when creating/updating dependencies in Grid
+
+### Example
+
+If your `.grid-state.yaml` has:
+```yaml
+dependencies:
+  - guid: "abc-123"  # No output specified
+```
+
+And your `main.tf` contains:
+```hcl
+data "terraform_remote_state" "vpc" {
+  # ...
+}
+
+resource "aws_instance" "app" {
+  subnet_id = data.terraform_remote_state.vpc.outputs.subnet_id
+  vpc_id    = data.terraform_remote_state.vpc.outputs.vpc_id
+}
+```
+
+Gridops will automatically infer and create dependencies for:
+- `abc-123` → `subnet_id`
+- `abc-123` → `vpc_id`
+
+This ensures your dependency configuration in Grid matches what Terraform is actually using, without requiring manual specification of every output.
