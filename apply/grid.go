@@ -174,7 +174,7 @@ func resolveDependencies(c plan.ComponentCommon, envName, compName string, confi
 				})
 			}
 			// If no outputs specified, add a dependency without output field.
-			// grid-sync will default this to "default" output for backward compatibility.
+			// gridops will default this to "default" output for backward compatibility.
 			// This allows old configs with string list format to work with Grid.
 			if len(outputs) == 0 {
 				deps = append(deps, markers.Dependency{GUID: guid})
@@ -204,7 +204,7 @@ func resolveDependencies(c plan.ComponentCommon, envName, compName string, confi
 				})
 			}
 			// If no outputs specified, add a dependency without output field.
-			// grid-sync will default this to "default" output for backward compatibility.
+			// gridops will default this to "default" output for backward compatibility.
 			// This allows old configs with string list format to work with Grid.
 			if len(outputs) == 0 {
 				deps = append(deps, markers.Dependency{GUID: guid})

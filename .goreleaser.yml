@@ -12,8 +12,8 @@ builds:
     ldflags:
       - "-w -s -X main.Date={{.CommitDate}} -X github.com/chanzuckerberg/fogg/util.GitSha={{.Commit}} -X github.com/chanzuckerberg/fogg/util.Version={{.Version}} -X github.com/chanzuckerberg/fogg/util.Dirty=false -X github.com/chanzuckerberg/fogg/util.Release=true"
     mod_timestamp: "{{ .CommitTimestamp }}"
-  - main: ./cmd/grid-sync
-    binary: grid-sync
+  - main: ./cmd/gridops
+    binary: gridops
     env:
       - CGO_ENABLED=0
     goos:

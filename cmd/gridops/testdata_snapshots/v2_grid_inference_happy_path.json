@@ -1,0 +1,122 @@
+{
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/AddDependency",
+      "body": {
+        "from": {
+          "guid": "11111111-2222-3333-4444-555555555555",
+          "logicId": ""
+        },
+        "fromOutput": "database_subnet_group",
+        "to": {
+          "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+          "logicId": ""
+        },
+        "toInputName": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/AddDependency",
+      "body": {
+        "from": {
+          "guid": "11111111-2222-3333-4444-555555555555",
+          "logicId": ""
+        },
+        "fromOutput": "vpc_cidr_block",
+        "to": {
+          "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+          "logicId": ""
+        },
+        "toInputName": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/AddDependency",
+      "body": {
+        "from": {
+          "guid": "11111111-2222-3333-4444-555555555555",
+          "logicId": ""
+        },
+        "fromOutput": "vpc_id",
+        "to": {
+          "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+          "logicId": ""
+        },
+        "toInputName": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/AddDependency",
+      "body": {
+        "from": {
+          "guid": "11111111-2222-3333-4444-555555555555",
+          "logicId": ""
+        },
+        "fromOutput": "vpc_name",
+        "to": {
+          "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+          "logicId": ""
+        },
+        "toInputName": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/CreateState",
+      "body": {
+        "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+        "labels": {
+          "managed_by": "fogg"
+        },
+        "logicId": "proj-test-existing"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/CreateState",
+      "body": {
+        "guid": "11111111-2222-3333-4444-555555555555",
+        "labels": {
+          "managed_by": "fogg"
+        },
+        "logicId": "proj-test-vpc"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/GetStateInfo",
+      "body": {
+        "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+        "logicId": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/GetStateInfo",
+      "body": {
+        "guid": "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+        "logicId": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/GetStateInfo",
+      "body": {
+        "guid": "11111111-2222-3333-4444-555555555555",
+        "logicId": ""
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/state.v1.StateService/GetStateInfo",
+      "body": {
+        "guid": "11111111-2222-3333-4444-555555555555",
+        "logicId": ""
+      }
+    }
+  ]
+}

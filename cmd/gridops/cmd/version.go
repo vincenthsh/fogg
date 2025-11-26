@@ -9,7 +9,7 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of grid-sync",
+	Short: "Print the version number of gridops",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		v, e := util.VersionString()
 		if e != nil {
