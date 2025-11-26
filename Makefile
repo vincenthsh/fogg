@@ -101,4 +101,14 @@ clean: ## clean the repo
 
 update-golden-files: clean ## update the golden files in testdata
 	go test -v -run TestIntegration ./apply/ -update
+	$(MAKE) test-gridops-integration
 .PHONY: update-golden-files
+
+test-gridops-integration: ## run gridops integration tests (requires golden files)
+	go test -v -run TestGridOpsIntegration ./cmd/gridops/cmd/
+.PHONY: test-gridops-integration
+
+update-gridops-snapshots: clean ## update gridops API call snapshots
+	go test -v -run TestIntegration ./apply/ -update
+	go test -v -run TestGridOpsIntegration ./cmd/gridops/cmd/ -update
+.PHONY: update-gridops-snapshots
