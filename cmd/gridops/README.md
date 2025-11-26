@@ -29,6 +29,8 @@ Authenticate with Grid API and output access credentials. This command is useful
 
 #### Atlantis Integration Example
 
+Atlantis Reference: [Environment Variable env Command](https://www.runatlantis.io/docs/custom-workflows?utm_source=chatgpt.com#environment-variable-env-command)
+
 To integrate with Atlantis, you can use the auth command to dynamically fetch access tokens for Terraform HTTP backend authentication:
 
 ```yaml
@@ -38,10 +40,10 @@ workflows:
       steps:
         - env:
             name: TF_HTTP_USERNAME
-            value: 'gridops'
+            value: "gridops"
         - env:
             name: TF_HTTP_PASSWORD
-            command: 'gridops auth --service-account /etc/grid/sa.json --token'
+            command: "gridops auth --service-account /etc/grid/sa.json --token"
         - init
         - plan
 
@@ -49,10 +51,10 @@ workflows:
       steps:
         - env:
             name: TF_HTTP_USERNAME
-            value: 'gridops'
+            value: "gridops"
         - env:
             name: TF_HTTP_PASSWORD
-            command: 'gridops auth --service-account /etc/grid/sa.json --token'
+            command: "gridops auth --service-account /etc/grid/sa.json --token"
         - apply
 ```
 
@@ -72,6 +74,7 @@ Synchronize local `.grid-state.yaml` marker files with the Grid API. This comman
 6. **Manages dependencies** between states (adds missing edges, removes stale ones)
 
 The sync operates in two passes:
+
 - **First pass**: Creates/updates all states and their labels
 - **Second pass**: Synchronizes dependencies (ensures all referenced states exist first)
 
@@ -91,6 +94,7 @@ gridops sync --client-id <id> --client-secret <secret>
 #### Flags
 
 Inherits global flags:
+
 - `--server <url>`: Grid API base URL (or use `GRID_API_URL` environment variable)
 - `--client-id <id>`: Grid service account client ID (or use `GRID_CLIENT_ID`)
 - `--client-secret <secret>`: Grid service account client secret (or use `GRID_CLIENT_SECRET`)
@@ -145,6 +149,7 @@ gridops doctor -vv --with-grid-preview
 - `--with-grid-preview`: Connect to Grid API and preview sync actions without making changes (dry-run)
 
 Inherits global flags:
+
 - `--server <url>`: Grid API base URL (required for `--with-grid-preview`)
 - `--client-id <id>`: Grid service account client ID
 - `--client-secret <secret>`: Grid service account client secret
@@ -166,12 +171,14 @@ When dependencies in `.grid-state.yaml` don't specify which output to use, grido
 ### Example
 
 If your `.grid-state.yaml` has:
+
 ```yaml
 dependencies:
-  - guid: "abc-123"  # No output specified
+  - guid: "abc-123" # No output specified
 ```
 
 And your `main.tf` contains:
+
 ```hcl
 data "terraform_remote_state" "vpc" {
   # ...
@@ -184,6 +191,7 @@ resource "aws_instance" "app" {
 ```
 
 Gridops will automatically infer and create dependencies for:
+
 - `abc-123` → `subnet_id`
 - `abc-123` → `vpc_id`
 

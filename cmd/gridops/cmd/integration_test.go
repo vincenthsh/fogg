@@ -1,39 +1,38 @@
 package cmd
 
-// Integration tests for gridops that validate the fogg → gridops workflow.
-//
-// These tests use the golden test data from testdata/ to ensure that:
-// 1. Markers are correctly scanned and validated
-// 2. Dependencies are properly inferred from Terraform files
-// 3. (Future) API calls to Grid match expected snapshots
-//
-// Usage:
-//   make test-gridops-integration          # Run integration tests
-//   make update-gridops-snapshots          # Update API call snapshots
-//
-// Note: These tests require golden files to be present. Run `make update-golden-files` first
-// if the testdata directories are empty.
-
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/chanzuckerberg/fogg/util"
 	"github.com/stretchr/testify/require"
+	"github.com/terraconstructs/grid/pkg/sdk"
 )
 
 var updateSnapshots = flag.Bool("update", false, "update API call snapshots")
+
+type integrationTestCase struct {
+	name           string
+	testdataDir    string
+	existingStates []seedState
+	existingDeps   []sdk.DependencyEdge
+}
+
+type seedState struct {
+	guid    string
+	logicID string
+	labels  sdk.LabelMap
+}
 
 // APICall represents a captured API call for snapshotting
 type APICall struct {
@@ -47,220 +46,209 @@ type APICallSnapshot struct {
 	Calls []APICall `json:"calls"`
 }
 
-// mockGridServer creates an httptest server that mocks the Grid API
-// and captures all API calls
-func mockGridServer(t *testing.T, calls *[]APICall) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Read and parse body if present
-		var bodyMap map[string]interface{}
-		if r.Body != nil {
-			bodyBytes, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
-			r.Body.Close()
-
-			if len(bodyBytes) > 0 {
-				err = json.Unmarshal(bodyBytes, &bodyMap)
-				if err != nil {
-					// If it's not JSON, store as string
-					bodyMap = map[string]interface{}{
-						"_raw": string(bodyBytes),
-					}
-				}
-			}
-		}
-
-		// Capture the call
-		*calls = append(*calls, APICall{
-			Method: r.Method,
-			Path:   r.URL.Path,
-			Body:   bodyMap,
-		})
-
-		// Mock responses based on path patterns
-		switch {
-		case r.URL.Path == "/.well-known/grid/auth":
-			// Auth discovery - return auth disabled for simplicity
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "auth not configured",
-			})
-
-		case strings.HasPrefix(r.URL.Path, "/api/v1/states/") && r.Method == "GET":
-			// GetStateInfo - return 404 to simulate state doesn't exist yet
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "state not found",
-			})
-
-		case r.URL.Path == "/api/v1/states" && r.Method == "POST":
-			// CreateState - return success
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"guid":      bodyMap["guid"],
-				"logicalId": bodyMap["logicalId"],
-			})
-
-		case strings.HasPrefix(r.URL.Path, "/api/v1/states/") && strings.HasSuffix(r.URL.Path, "/labels") && r.Method == "PATCH":
-			// UpdateStateLabels - return success
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]string{
-				"status": "ok",
-			})
-
-		case strings.HasPrefix(r.URL.Path, "/api/v1/dependencies") && r.Method == "POST":
-			// AddDependency - return success
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id":   1,
-				"from": bodyMap["from"],
-				"to":   bodyMap["to"],
-			})
-
-		case strings.HasPrefix(r.URL.Path, "/api/v1/dependencies/") && r.Method == "DELETE":
-			// RemoveDependency - return success
-			w.WriteHeader(http.StatusNoContent)
-
-		default:
-			t.Logf("Unhandled request: %s %s", r.Method, r.URL.Path)
-			w.WriteHeader(http.StatusNotImplemented)
-		}
-	}))
-}
-
+// TestGridOpsIntegration tests the sync command with a fake Grid API client and seed data
 func TestGridOpsIntegration(t *testing.T) {
-	testCases := []struct {
-		name        string
-		testdataDir string
-	}{
+	testCases := []integrationTestCase{
 		{
-			name:        "v2_grid_inference",
+			name:        "v2_grid_inference_happy_path",
 			testdataDir: "v2_grid_inference",
+		},
+		{
+			name:        "v2_grid_inference_existing_state",
+			testdataDir: "v2_grid_inference",
+			existingStates: []seedState{
+				{
+					guid:    "11111111-2222-3333-4444-555555555555",
+					logicID: "proj-test-vpc",
+					labels: sdk.LabelMap{
+						"managed_by": "legacy",
+						"legacy":     "true",
+					},
+				},
+				{
+					guid:    "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+					logicID: "proj-test-existing",
+					labels: sdk.LabelMap{
+						"managed_by": "legacy",
+					},
+				},
+			},
+			existingDeps: []sdk.DependencyEdge{
+				{
+					ID: 1,
+					From: sdk.StateReference{
+						GUID: "11111111-2222-3333-4444-555555555555",
+					},
+					FromOutput: "vpc_id",
+					To: sdk.StateReference{
+						GUID: "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+					},
+					ToInputName: "",
+				},
+				{
+					ID: 2,
+					From: sdk.StateReference{
+						GUID: "11111111-2222-3333-4444-555555555555",
+					},
+					FromOutput: "vpc_name",
+					To: sdk.StateReference{
+						GUID: "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+					},
+					ToInputName: "",
+				},
+				{
+					ID: 3,
+					From: sdk.StateReference{
+						GUID: "deadbeef-dead-beef-dead-beefdeadbeef",
+					},
+					FromOutput: "unused_output",
+					To: sdk.StateReference{
+						GUID: "019aa5fe-90bc-721b-8e3d-dde5a72aba70",
+					},
+					ToInputName: "",
+				},
+			},
 		},
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
 
-			// Set up paths
 			projectRoot := util.ProjectRoot()
 			testdataPath := filepath.Join(projectRoot, "testdata", tc.testdataDir)
-			snapshotPath := filepath.Join(testdataPath, ".gridops-snapshot.json")
+			snapshotPath := filepath.Join(projectRoot, "cmd", "gridops", "testdata_snapshots", tc.name+".json")
+			stdoutSnapshotPath := filepath.Join(projectRoot, "cmd", "gridops", "testdata_snapshots", tc.name+"-stdout.txt")
+			// ensure snapshot Path directory exists
+			err := os.MkdirAll(filepath.Dir(snapshotPath), 0o755)
+			r.NoError(err, "failed to create snapshot directory")
 			terraformPath := filepath.Join(testdataPath, "terraform")
 
-			// Verify testdata exists
-			_, err := os.Stat(terraformPath)
+			_, err = os.Stat(terraformPath)
 			r.NoError(err, "testdata directory should exist (run 'make update-golden-files' first)")
 
-			// Set up mock Grid API server
 			var capturedCalls []APICall
-			mockServer := mockGridServer(t, &capturedCalls)
-			defer mockServer.Close()
+			fakeClient := newFakeGridClient(&capturedCalls)
+			seedFakeGridClient(fakeClient, tc)
 
-			// Save original working directory
-			originalWd, err := os.Getwd()
+			originalFactory := gridClientFactory
+			gridClientFactory = func(ctx context.Context, cfg sessionConfig) (gridAPIClient, error) {
+				return fakeClient, nil
+			}
+			defer func() { gridClientFactory = originalFactory }()
+
+			origOpts := opts
+			defer func() { opts = origOpts }()
+
+			stdout, stderr, err := runGridOpsCommand(t, testdataPath, "sync", "--server", "https://grid.mock")
+			t.Logf("stdout:\n%s", stdout)
+			t.Logf("stderr:\n%s", stderr)
 			r.NoError(err)
-			defer os.Chdir(originalWd)
 
-			// Change to terraform directory
-			err = os.Chdir(terraformPath)
-			r.NoError(err)
+			snapshot := &APICallSnapshot{Calls: capturedCalls}
 
-			// Override global options for the test
-			opts.serverURL = mockServer.URL
-			opts.clientID = ""
-			opts.clientSecret = ""
-
-			// Run sync command
-			ctx := context.Background()
-			markers, err := ScanMarkers(".", excludeDirs)
-			r.NoError(err)
-			r.NotEmpty(markers, "should find at least one marker")
-
-			// Validate markers
-			issues := ValidateMarkers(markers)
-			r.Empty(issues, "markers should be valid")
-
-			// Create a mock client without auth (since our mock doesn't need it)
-			session := sessionConfig{
-				ServerURL:    mockServer.URL,
-				ClientID:     "",
-				ClientSecret: "",
-			}
-
-			// We can't use newGridClient since it tries to discover auth
-			// Instead, we'll just verify markers were scanned correctly
-			// The actual sync would happen through the SDK
-
-			// For now, just verify the markers are correct
-			t.Logf("Found %d markers", len(markers))
-			for _, m := range markers {
-				t.Logf("  - %s (GUID: %s)", m.Marker.LogicalID, m.Marker.GUID)
-				if len(m.Marker.Dependencies) > 0 {
-					t.Logf("    Dependencies:")
-					for _, dep := range m.Marker.Dependencies {
-						t.Logf("      - GUID: %s, Output: %s", dep.GUID, dep.Output)
-					}
+			if *updateSnapshots {
+				r.NoError(saveSnapshot(snapshotPath, snapshot))
+				r.NoError(saveStdoutSnapshot(stdoutSnapshotPath, stdout))
+			} else {
+				expected, loadErr := loadSnapshot(snapshotPath)
+				if errors.Is(loadErr, os.ErrNotExist) {
+					t.Fatalf("snapshot %s missing; run 'make update-gridops-snapshots'", snapshotPath)
 				}
-			}
+				r.NoError(loadErr)
+				r.True(compareSnapshots(t, expected, snapshot))
 
-			// Verify expected markers
-			r.Len(markers, 2, "should find 2 markers (vpc and existing)")
-
-			// Find vpc and existing markers
-			var vpcMarker, existingMarker *LoadedMarker
-			for i := range markers {
-				if markers[i].Marker.LogicalID == "proj-test-vpc" {
-					vpcMarker = &markers[i]
-				} else if markers[i].Marker.LogicalID == "proj-test-existing" {
-					existingMarker = &markers[i]
+				expectedStdout, stdoutErr := loadStdoutSnapshot(stdoutSnapshotPath)
+				if errors.Is(stdoutErr, os.ErrNotExist) {
+					t.Fatalf("stdout snapshot %s missing; run 'make update-gridops-snapshots'", stdoutSnapshotPath)
 				}
+				r.NoError(stdoutErr)
+				r.Equal(expectedStdout, stdout)
 			}
-
-			r.NotNil(vpcMarker, "should find vpc marker")
-			r.NotNil(existingMarker, "should find existing marker")
-
-			// Verify vpc has no dependencies
-			r.Empty(vpcMarker.Marker.Dependencies, "vpc should have no dependencies")
-
-			// Verify existing has dependency on vpc
-			r.Len(existingMarker.Marker.Dependencies, 1, "existing should have 1 dependency")
-			r.Equal("11111111-2222-3333-4444-555555555555", existingMarker.Marker.Dependencies[0].GUID)
-
-			// Test dependency resolution (inference)
-			resolvedDeps, err := resolveMarkerDependencies(*existingMarker)
-			r.NoError(err, "should resolve dependencies")
-			r.NotEmpty(resolvedDeps, "should infer at least one dependency with output")
-
-			// Verify inferred output is vpc_name
-			foundVPCName := false
-			for _, dep := range resolvedDeps {
-				if dep.GUID == "11111111-2222-3333-4444-555555555555" && dep.Output == "vpc_name" {
-					foundVPCName = true
-					break
-				}
-			}
-			r.True(foundVPCName, "should infer vpc_name output from test.tf.json")
-
-			t.Logf("Successfully validated dependency inference:")
-			for _, dep := range resolvedDeps {
-				t.Logf("  - GUID: %s -> Output: %s", dep.GUID, dep.Output)
-			}
-
-			// Note: We're not actually calling the sync command here because:
-			// 1. The mock server needs proper Grid API protocol implementation
-			// 2. The SDK client has its own auth requirements
-			// 3. For now, we're testing the core logic: scanning, validation, and inference
-
-			// If updateSnapshots is true, this is where we'd save the snapshot
-			// For now, we'll skip the actual API call snapshotting since we need
-			// a more complete mock implementation
-
-			_ = session // unused for now
-			_ = snapshotPath
-			_ = capturedCalls
 		})
 	}
+}
+
+func seedFakeGridClient(client *fakeGridClient, tc integrationTestCase) {
+	for _, state := range tc.existingStates {
+		client.states[state.guid] = &fakeState{
+			guid:    state.guid,
+			logicID: state.logicID,
+			labels:  copyLabelMap(state.labels),
+		}
+	}
+
+	for _, dep := range tc.existingDeps {
+		edge := dep
+		if edge.ID == 0 {
+			edge.ID = client.nextEdgeID
+			client.nextEdgeID++
+		}
+		if edge.ID >= client.nextEdgeID {
+			client.nextEdgeID = edge.ID + 1
+		}
+		client.deps[edge.ID] = edge
+	}
+}
+
+func runGridOpsCommand(t *testing.T, workdir string, args ...string) (string, string, error) {
+	t.Helper()
+
+	originalWd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(workdir))
+	defer os.Chdir(originalWd)
+
+	rootCmd.SetArgs(args)
+
+	stdout, stderr, execErr := captureStdoutStderr(func() error {
+		return rootCmd.Execute()
+	})
+
+	rootCmd.SetArgs(nil)
+	return stdout, stderr, execErr
+}
+
+func captureStdoutStderr(fn func() error) (string, string, error) {
+	originalStdout := os.Stdout
+	originalStderr := os.Stderr
+
+	stdoutReader, stdoutWriter, err := os.Pipe()
+	if err != nil {
+		return "", "", err
+	}
+	stderrReader, stderrWriter, err := os.Pipe()
+	if err != nil {
+		stdoutWriter.Close()
+		stdoutReader.Close()
+		return "", "", err
+	}
+
+	os.Stdout = stdoutWriter
+	os.Stderr = stderrWriter
+
+	execErr := fn()
+
+	stdoutWriter.Close()
+	stderrWriter.Close()
+
+	os.Stdout = originalStdout
+	os.Stderr = originalStderr
+
+	stdoutBytes, readOutErr := io.ReadAll(stdoutReader)
+	stdoutReader.Close()
+	stderrBytes, readErrErr := io.ReadAll(stderrReader)
+	stderrReader.Close()
+
+	if readOutErr != nil {
+		return "", "", readOutErr
+	}
+	if readErrErr != nil {
+		return "", "", readErrErr
+	}
+
+	return string(stdoutBytes), string(stderrBytes), execErr
 }
 
 // normalizeSnapshot sorts calls for deterministic comparison
@@ -269,7 +257,10 @@ func normalizeSnapshot(snapshot *APICallSnapshot) {
 		if snapshot.Calls[i].Method != snapshot.Calls[j].Method {
 			return snapshot.Calls[i].Method < snapshot.Calls[j].Method
 		}
-		return snapshot.Calls[i].Path < snapshot.Calls[j].Path
+		if snapshot.Calls[i].Path != snapshot.Calls[j].Path {
+			return snapshot.Calls[i].Path < snapshot.Calls[j].Path
+		}
+		return fmt.Sprint(snapshot.Calls[i].Body) < fmt.Sprint(snapshot.Calls[j].Body)
 	})
 }
 
@@ -315,5 +306,195 @@ func saveSnapshot(path string, snapshot *APICallSnapshot) error {
 		return err
 	}
 
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0o644)
+}
+
+func loadStdoutSnapshot(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func saveStdoutSnapshot(path string, stdout string) error {
+	return os.WriteFile(path, []byte(stdout), 0o644)
+}
+
+type fakeGridClient struct {
+	calls      *[]APICall
+	states     map[string]*fakeState
+	deps       map[int64]sdk.DependencyEdge
+	nextEdgeID int64
+}
+
+type fakeState struct {
+	guid    string
+	logicID string
+	labels  sdk.LabelMap
+}
+
+func newFakeGridClient(calls *[]APICall) *fakeGridClient {
+	return &fakeGridClient{
+		calls:      calls,
+		states:     make(map[string]*fakeState),
+		deps:       make(map[int64]sdk.DependencyEdge),
+		nextEdgeID: 1,
+	}
+}
+
+func (c *fakeGridClient) recordCall(method, path string, body map[string]interface{}) {
+	if c.calls == nil {
+		return
+	}
+	*c.calls = append(*c.calls, APICall{Method: method, Path: path, Body: body})
+}
+
+func (c *fakeGridClient) GetStateInfo(_ context.Context, ref sdk.StateReference) (*sdk.StateInfo, error) {
+	c.recordCall("POST", "/state.v1.StateService/GetStateInfo", map[string]interface{}{
+		"guid":    ref.GUID,
+		"logicId": ref.LogicID,
+	})
+
+	state, ok := c.states[ref.GUID]
+	if !ok {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("state %s not found", ref.GUID))
+	}
+
+	return &sdk.StateInfo{
+		State: sdk.StateReference{
+			GUID:    state.guid,
+			LogicID: state.logicID,
+		},
+		Labels:       copyLabelMap(state.labels),
+		Dependencies: c.dependenciesFor(state.guid),
+	}, nil
+}
+
+func (c *fakeGridClient) CreateState(_ context.Context, input sdk.CreateStateInput) (*sdk.State, error) {
+	c.recordCall("POST", "/state.v1.StateService/CreateState", map[string]interface{}{
+		"guid":    input.GUID,
+		"logicId": input.LogicID,
+		"labels":  input.Labels,
+	})
+
+	if input.GUID == "" {
+		return nil, fmt.Errorf("guid is required")
+	}
+
+	if _, exists := c.states[input.GUID]; exists {
+		return nil, fmt.Errorf("state %s already exists", input.GUID)
+	}
+
+	c.states[input.GUID] = &fakeState{
+		guid:    input.GUID,
+		logicID: input.LogicID,
+		labels:  copyLabelMap(input.Labels),
+	}
+
+	return &sdk.State{GUID: input.GUID, LogicID: input.LogicID}, nil
+}
+
+func (c *fakeGridClient) UpdateStateLabels(_ context.Context, input sdk.UpdateStateLabelsInput) (*sdk.UpdateStateLabelsResult, error) {
+	c.recordCall("POST", "/state.v1.StateService/UpdateStateLabels", map[string]interface{}{
+		"stateId":  input.StateID,
+		"adds":     input.Adds,
+		"removals": input.Removals,
+	})
+
+	state, ok := c.states[input.StateID]
+	if !ok {
+		return nil, fmt.Errorf("state %s not found", input.StateID)
+	}
+
+	if state.labels == nil {
+		state.labels = sdk.LabelMap{}
+	}
+
+	for k, v := range input.Adds {
+		state.labels[k] = v
+	}
+	for _, key := range input.Removals {
+		delete(state.labels, key)
+	}
+
+	return &sdk.UpdateStateLabelsResult{
+		StateID: state.guid,
+		Labels:  copyLabelMap(state.labels),
+	}, nil
+}
+
+func (c *fakeGridClient) AddDependency(_ context.Context, input sdk.AddDependencyInput) (*sdk.AddDependencyResult, error) {
+	c.recordCall("POST", "/state.v1.StateService/AddDependency", map[string]interface{}{
+		"from": map[string]interface{}{
+			"guid":    input.From.GUID,
+			"logicId": input.From.LogicID,
+		},
+		"fromOutput": input.FromOutput,
+		"to": map[string]interface{}{
+			"guid":    input.To.GUID,
+			"logicId": input.To.LogicID,
+		},
+		"toInputName": input.ToInputName,
+	})
+
+	if input.To.GUID == "" {
+		return nil, fmt.Errorf("to guid is required")
+	}
+
+	key := depKey(input.From.GUID, input.FromOutput)
+	for _, edge := range c.deps {
+		if edge.To.GUID == input.To.GUID && depKey(edge.From.GUID, edge.FromOutput) == key && edge.ToInputName == input.ToInputName {
+			return &sdk.AddDependencyResult{Edge: edge, AlreadyExists: true}, nil
+		}
+	}
+
+	edge := sdk.DependencyEdge{
+		ID:         c.nextEdgeID,
+		From:       input.From,
+		FromOutput: input.FromOutput,
+		To: sdk.StateReference{
+			GUID:    input.To.GUID,
+			LogicID: input.To.LogicID,
+		},
+		ToInputName: input.ToInputName,
+	}
+	c.nextEdgeID++
+	c.deps[edge.ID] = edge
+
+	return &sdk.AddDependencyResult{Edge: edge}, nil
+}
+
+func (c *fakeGridClient) RemoveDependency(_ context.Context, edgeID int64) error {
+	c.recordCall("POST", "/state.v1.StateService/RemoveDependency", map[string]interface{}{
+		"edgeId": edgeID,
+	})
+
+	if _, ok := c.deps[edgeID]; !ok {
+		return fmt.Errorf("edge %d not found", edgeID)
+	}
+
+	delete(c.deps, edgeID)
+	return nil
+}
+
+func (c *fakeGridClient) dependenciesFor(toGUID string) []sdk.DependencyEdge {
+	var edges []sdk.DependencyEdge
+	for _, edge := range c.deps {
+		if edge.To.GUID == toGUID {
+			edges = append(edges, edge)
+		}
+	}
+	return edges
+}
+
+func copyLabelMap(src sdk.LabelMap) sdk.LabelMap {
+	if len(src) == 0 {
+		return nil
+	}
+	dst := make(sdk.LabelMap, len(src))
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
 }

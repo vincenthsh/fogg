@@ -45,7 +45,7 @@ var syncCmd = &cobra.Command{
 			ClientSecret: opts.clientSecret,
 		}
 
-		client, err := newGridClient(ctx, session)
+		client, err := gridClientFactory(ctx, session)
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,7 @@ var syncCmd = &cobra.Command{
 }
 
 // syncMarkerState creates or updates the state and its labels (but not dependencies)
-func syncMarkerState(ctx context.Context, client *sdk.Client, marker LoadedMarker) error {
+func syncMarkerState(ctx context.Context, client gridAPIClient, marker LoadedMarker) error {
 	desiredLabels := markerLabelsToLabelMap(marker.Marker.Labels)
 
 	info, err := client.GetStateInfo(ctx, sdk.StateReference{GUID: marker.Marker.GUID})
@@ -117,7 +117,7 @@ func syncMarkerState(ctx context.Context, client *sdk.Client, marker LoadedMarke
 }
 
 // syncMarkerDependencies syncs dependency edges for a state
-func syncMarkerDependencies(ctx context.Context, client *sdk.Client, marker LoadedMarker) error {
+func syncMarkerDependencies(ctx context.Context, client gridAPIClient, marker LoadedMarker) error {
 	desiredDeps, err := resolveMarkerDependencies(marker)
 	if err != nil {
 		return err
@@ -128,7 +128,7 @@ func syncMarkerDependencies(ctx context.Context, client *sdk.Client, marker Load
 		return fmt.Errorf("failed to fetch state guid=%s: %w", marker.Marker.GUID, err)
 	}
 
-	return syncDependencies(ctx, client, marker, info, desiredDeps)
+	return syncDependencies(ctx, client, info, desiredDeps)
 }
 
 func markerLabelsToLabelMap(labels map[string]string) sdk.LabelMap {
@@ -183,7 +183,7 @@ func valuesEqual(a any, b any) bool {
 	}
 }
 
-func syncDependencies(ctx context.Context, client *sdk.Client, marker LoadedMarker, info *sdk.StateInfo, desired []markers.Dependency) error {
+func syncDependencies(ctx context.Context, client gridAPIClient, info *sdk.StateInfo, desired []markers.Dependency) error {
 	const defaultOutput = "default"
 
 	desiredMap := make(map[string]markers.Dependency)
