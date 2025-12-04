@@ -659,10 +659,10 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/tencentcloud/tencentcloud-sdk-go v3.0.82+incompatible/go.mod h1:0PfYow01SHPMhKY31xa+EFz2RStxIqj6JFAJS+IkCi4=
 github.com/tencentyun/cos-go-sdk-v5 v0.0.0-20190808065407-f07404cefc8c/go.mod h1:wk2XFUg6egk4tSDNZtXeKfe2G6690UVyt163PuUxBZk=
-github.com/terraconstructs/grid/api v0.0.0-20251116113345-039dae9642b7 h1:uTKg4B6o174fAreeCgnah12NBO1zSL3SQVnTi3x/MU4=
-github.com/terraconstructs/grid/api v0.0.0-20251116113345-039dae9642b7/go.mod h1:SyJTn999bWXdNeYPmD/zTn6SKedQKzUeY3fVHOZsp4k=
-github.com/terraconstructs/grid/pkg/sdk v0.0.0-20251116113345-039dae9642b7 h1:5/je8lUe2NA3oK1aKKVqj3LwWHFuh62zAINBCoCTnFI=
-github.com/terraconstructs/grid/pkg/sdk v0.0.0-20251116113345-039dae9642b7/go.mod h1:AyWfIG7H011CERQbduBZgt1VSSg4deZRZKuIwTcfBAQ=
+github.com/terraconstructs/grid/pkg/api v0.1.3 h1:tUZL9g6qJEscaq9LnfJJYW+v9HAW3KibkXE5SlBmjrg=
+github.com/terraconstructs/grid/pkg/api v0.1.3/go.mod h1:tlf/sYPTqXKwDVb2ra2+5v5UguY5XimyWAhIyzbI/1w=
+github.com/terraconstructs/grid/pkg/sdk v0.1.3 h1:uTeX71a7jFbBP+wrzX18ulPio4N+YU6coYO8TrNkaWw=
+github.com/terraconstructs/grid/pkg/sdk v0.1.3/go.mod h1:AlQ7kcyrOUyHnzOB6Je2ca70QKu7nDfTyQqaqs2k9IE=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20171017195756-830351dc03c6/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tombuildsstuff/giovanni v0.15.1/go.mod h1:0TZugJPEtqzPlMpuJHYfXY6Dq2uLPrXf98D2XQSxNbA=
 github.com/ugorji/go v0.0.0-20180813092308-00b869d2f4a5/go.mod h1:hnLbHMwcvSihnDhEfx2/BzKp2xb0Y+ErdfYcrs9tkJQ=

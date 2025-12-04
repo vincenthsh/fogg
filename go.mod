@@ -36,7 +36,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
-	github.com/terraconstructs/grid/pkg/sdk v0.0.0-20251116113345-039dae9642b7
+	github.com/terraconstructs/grid/pkg/sdk v0.1.3
 	github.com/zclconf/go-cty v1.17.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/text v0.31.0
@@ -131,7 +131,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
-	github.com/terraconstructs/grid/api v0.0.0 // indirect
+	github.com/terraconstructs/grid/pkg/api v0.1.3 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
@@ -167,5 +167,3 @@ require (
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-replace github.com/terraconstructs/grid/api => github.com/terraconstructs/grid/api v0.0.0-20251116113345-039dae9642b7
