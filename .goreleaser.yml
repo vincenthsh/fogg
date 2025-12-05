@@ -1,5 +1,23 @@
+version: 2
+
 builds:
-  - binary: fogg
+  - id: fogg
+    main: ./cmd/fogg
+    binary: fogg
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - "-w -s -X main.Date={{.CommitDate}} -X github.com/chanzuckerberg/fogg/util.GitSha={{.Commit}} -X github.com/chanzuckerberg/fogg/util.Version={{.Version}} -X github.com/chanzuckerberg/fogg/util.Dirty=false -X github.com/chanzuckerberg/fogg/util.Release=true"
+    mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: gridops
+    main: ./cmd/gridops
+    binary: gridops
     env:
       - CGO_ENABLED=0
     goos:
@@ -13,8 +31,18 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - files:
+  - id: fogg
+    builds:
+      - fogg
+    name_template: "fogg_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - none*
+  - id: gridops
+    builds:
+      - gridops
+    name_template: "gridops_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
       - none*
 
 release:
-  prerelease: false
+  prerelease: auto

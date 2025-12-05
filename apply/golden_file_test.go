@@ -46,6 +46,8 @@ func TestIntegration(t *testing.T) {
 		{"v2_integration_registry"},
 		{"v2_github_actions_with_pre_commit"},
 		{"v2_atlantis_depends_on"},
+		{"v2_grid"},
+		{"v2_grid_inference"},
 		{"v2_cdktf_components"},
 		{"v2_terraconstruct_components"},
 		{"generic_providers_yaml"},
@@ -69,6 +71,8 @@ func TestIntegration(t *testing.T) {
 			var fixtureDirs = []string{
 				"fogg.d",
 				"foo_modules",
+				// keep dir with existing .grid_marker.yaml and variables.tf
+				"terraform/envs/test/existing",
 			}
 
 			isFixtureFile := func(path string) bool {
@@ -130,9 +134,9 @@ func TestIntegration(t *testing.T) {
 				// Copy all fixtures directories into the tmp test fs
 				for _, dir := range fixtureDirs {
 					if dirInfo, err := testdataFs.Stat(dir); err == nil && dirInfo.IsDir() {
-						fs.Mkdir(dir, 0700)
+						fs.MkdirAll(dir, 0700)
 						afero.Walk(testdataFs, dir, func(path string, info os.FileInfo, err error) error {
-							if !info.IsDir() {
+							if !info.IsDir() && info.Mode()&os.ModeSymlink == 0 {
 								contents, e := afero.ReadFile(testdataFs, path)
 								r.NoError(e)
 								r.NoError(afero.WriteFile(fs, path, contents, info.Mode()))
