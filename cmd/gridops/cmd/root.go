@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type options struct {
@@ -14,6 +15,7 @@ type options struct {
 
 var opts options
 var excludeDirs []string
+var cfgFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "gridops",
@@ -35,7 +37,39 @@ func envDefault(key, fallback string) string {
 	return fallback
 }
 
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Search for .gridops.yaml in current directory
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".gridops")
+		viper.SetConfigType("yaml")
+	}
+
+	viper.AutomaticEnv()
+
+	// If a config file is found, read it in
+	if err := viper.ReadInConfig(); err == nil {
+		// Config file found and successfully parsed
+		// Override flags with config file values if not explicitly set
+		if !rootCmd.PersistentFlags().Changed("server") && viper.IsSet("server") {
+			opts.serverURL = viper.GetString("server")
+		}
+		if !rootCmd.PersistentFlags().Changed("client-id") && viper.IsSet("client_id") {
+			opts.clientID = viper.GetString("client_id")
+		}
+		if !rootCmd.PersistentFlags().Changed("client-secret") && viper.IsSet("client_secret") {
+			opts.clientSecret = viper.GetString("client_secret")
+		}
+	}
+}
+
 func init() {
+	cobra.OnInitialize(initConfig)
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .gridops.yaml)")
 	rootCmd.PersistentFlags().StringVar(&opts.serverURL, "server", envDefault("GRID_API_URL", ""), "Grid API base URL (or use GRID_API_URL)")
 	rootCmd.PersistentFlags().StringVar(&opts.clientID, "client-id", envDefault("GRID_CLIENT_ID", ""), "Grid service account client ID (or use GRID_CLIENT_ID)")
 	rootCmd.PersistentFlags().StringVar(&opts.clientSecret, "client-secret", envDefault("GRID_CLIENT_SECRET", ""), "Grid service account client secret (or use GRID_CLIENT_SECRET)")

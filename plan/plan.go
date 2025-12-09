@@ -35,6 +35,7 @@ type Plan struct {
 	Turbo           *TurboConfig          `yaml:"turbo"`
 	Version         string                `yaml:"version"`
 	TFE             *TFEConfig            `yaml:"tfe"`
+	GridOps         GridOpsConfig         `yaml:"gridops"`
 }
 
 // Common represents common fields
@@ -441,6 +442,7 @@ func Eval(fs afero.Fs, c *v2.Config) (*Plan, error) {
 	p.CircleCI = p.buildCircleCIConfig(c, v)
 	p.GitHubActionsCI = p.buildGitHubActionsConfig(c, v)
 	p.Atlantis = p.buildAtlantisConfig(c)
+	p.GridOps = p.buildGridOpsConfig(c)
 	p.TFE, err = p.buildTFE(fs, c)
 	if err != nil {
 		return p, err
