@@ -175,6 +175,22 @@ func deRef[T any](v *T) T {
 	return *v
 }
 
+// sortedKeys returns the keys of a map sorted alphabetically.
+// It supports map[string]interface{}, map[string]string, and map[string][]string.
+func sortedKeys(in interface{}) []string {
+	v := reflect.ValueOf(in)
+	if v.Kind() != reflect.Map {
+		return nil
+	}
+
+	keys := make([]string, 0, v.Len())
+	for _, key := range v.MapKeys() {
+		keys = append(keys, key.String())
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // OpenTemplate will read `source` for a template, parse, configure and return a template.Template
 func OpenTemplate(label string, source io.Reader, templates fs.FS) (*template.Template, error) {
 	// TODO we should probably cache these rather than open and parse them for every apply
@@ -187,6 +203,7 @@ func OpenTemplate(label string, source io.Reader, templates fs.FS) (*template.Te
 	funcs["toHclBlock"] = toHCLBlock
 	funcs["toHclAssignment"] = toHCLAssignment
 	funcs["toHCLExpression"] = toHCLExpression
+	funcs["sortedKeys"] = sortedKeys
 
 	s, err := io.ReadAll(source)
 	if err != nil {

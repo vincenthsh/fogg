@@ -8,9 +8,10 @@ usage() {
   cat <<EOF
 $this: download go binaries for vincenthsh/fogg
 
-Usage: $this [-b] bindir [-d] [tag]
+Usage: $this [-b] bindir [-d] [-n binary_name] [tag]
   -b sets bindir or installation directory, Defaults to ./bin
   -d turns on debug logging
+  -n sets binary name (fogg or gridops), Defaults to fogg
    [tag] is a tag from
    https://github.com/vincenthsh/fogg/releases
    If tag is missing, then the latest will be used.
@@ -27,9 +28,11 @@ parse_args() {
   # over-ridden by flag below
 
   BINDIR=${BINDIR:-./bin}
-  while getopts "b:dh?" arg; do
+  BINARY=${BINARY:-fogg}
+  while getopts "b:n:dh?" arg; do
     case "$arg" in
       b) BINDIR="$OPTARG" ;;
+      n) BINARY="$OPTARG" ;;
       d) log_set_priority 10 ;;
       h | \?) usage "$0" ;;
     esac
@@ -50,13 +53,12 @@ execute() {
   srcdir="${tmpdir}"
   (cd "${tmpdir}" && untar "${TARBALL}")
   install -d "${BINDIR}"
-  for binexe in "fogg"; do
-    if [ "$OS" = "windows" ]; then
-      binexe="${binexe}.exe"
-    fi
-    install "${srcdir}/${binexe}" "${BINDIR}/"
-    log_info "installed ${BINDIR}/${binexe}"
-  done
+  binexe="${BINARY}"
+  if [ "$OS" = "windows" ]; then
+    binexe="${binexe}.exe"
+  fi
+  install "${srcdir}/${binexe}" "${BINDIR}/"
+  log_info "installed ${BINDIR}/${binexe}"
 }
 is_supported_platform() {
   platform=$1
@@ -340,10 +342,8 @@ End of functions from https://github.com/client9/shlib
 ------------------------------------------------------------------------
 EOF
 
-PROJECT_NAME="fogg"
 OWNER=vincenthsh
 REPO="fogg"
-BINARY=fogg
 FORMAT=tar.gz
 OS=$(uname_os)
 ARCH=$(uname_arch)
@@ -373,10 +373,10 @@ adjust_arch
 
 log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
-NAME=${PROJECT_NAME}_${VERSION}_${OS}_${ARCH}
+NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
 TARBALL=${NAME}.${FORMAT}
 TARBALL_URL=${GITHUB_DOWNLOAD}/${TAG}/${TARBALL}
-CHECKSUM=${PROJECT_NAME}_${VERSION}_checksums.txt
+CHECKSUM=fogg_${VERSION}_checksums.txt
 CHECKSUM_URL=${GITHUB_DOWNLOAD}/${TAG}/${CHECKSUM}
 
 execute
