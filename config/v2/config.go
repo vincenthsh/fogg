@@ -151,6 +151,7 @@ type Config struct {
 	TFE      *TFE               `yaml:"tfe,omitempty"`
 	ConfDir  *string            `yaml:"conf_dir,omitempty"`
 	Turbo    *TurboConfig       `yaml:"turbo,omitempty"`
+	Grid     *GridGlobal        `yaml:"grid,omitempty"`
 }
 
 type TFE struct {
@@ -177,7 +178,7 @@ type Common struct {
 	Tools             *Tools                      `yaml:"tools,omitempty"`
 	// Store output for Integrations (only ssm supported atm)
 	IntegrationRegistry *string     `yaml:"integration_registry,omitempty"`
-	Grid                *GridConfig `yaml:"grid,omitempty"`
+	Grid                *GridCommon `yaml:"grid,omitempty"`
 }
 
 type Defaults struct {
@@ -259,6 +260,21 @@ type GridConfig struct {
 	EnvMap map[string]string `yaml:"env_map,omitempty"`
 	// Optional: map account names to short aliases
 	AccountMap map[string]string `yaml:"account_map,omitempty"`
+}
+
+type GridGlobal struct {
+	Endpoint *string `yaml:"endpoint,omitempty"`
+	// Optional: override project name for logical IDs
+	Project *string `yaml:"project,omitempty"`
+	// Optional: map env names to short aliases
+	EnvMap map[string]string `yaml:"env_map,omitempty"`
+	// Optional: map account names to short aliases
+	AccountMap map[string]string `yaml:"account_map,omitempty"`
+}
+
+type GridCommon struct {
+	Enabled *bool   `yaml:"enabled,omitempty"`
+	GUID    *string `yaml:"guid,omitempty"`
 }
 
 type ComponentModule struct {

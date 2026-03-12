@@ -660,16 +660,12 @@ func (p *Plan) buildGithubActionsPreCommitConfig(c *v2.Config, foggVersion strin
 }
 
 func (p *Plan) buildGridOpsConfig(c *v2.Config) GridOpsConfig {
-	gridConfig := v2.ResolveGrid(c.Defaults.Common, c.Global.Common)
-
 	enabled := false
 	serverURL := ""
 
-	if gridConfig != nil && gridConfig.Enabled != nil && *gridConfig.Enabled {
+	if c.Grid != nil && c.Grid.Endpoint != nil && *c.Grid.Endpoint != "" {
 		enabled = true
-		if gridConfig.Endpoint != nil {
-			serverURL = *gridConfig.Endpoint
-		}
+		serverURL = *c.Grid.Endpoint
 	}
 
 	return GridOpsConfig{

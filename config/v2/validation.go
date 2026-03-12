@@ -185,8 +185,14 @@ func (c *Config) ValidateBackends() error {
 func (c *Config) ValidateGrid() error {
 	var errs *multierror.Error
 
+	if c.Grid != nil {
+		if c.Grid.Endpoint == nil || strings.TrimSpace(*c.Grid.Endpoint) == "" {
+			errs = multierror.Append(errs, fmt.Errorf("grid.endpoint must be set when grid config is present at root"))
+		}
+	}
+
 	c.WalkComponents(func(component string, commons ...Common) {
-		grid := ResolveGrid(commons...)
+		grid := ResolveGrid(c.Grid, commons...)
 		if grid == nil {
 			return
 		}

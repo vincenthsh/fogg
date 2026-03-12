@@ -331,7 +331,18 @@ func versionIsChanged(repo string, tool string) bool {
 }
 
 func applyRepo(fs afero.Fs, p *plan.Plan, repoTemplates, commonTemplates fs.FS) error {
-	return applyTree(fs, repoTemplates, commonTemplates, "", p)
+	err := applyTree(fs, repoTemplates, commonTemplates, "", p)
+	if err != nil {
+		return err
+	}
+
+	if !p.GridOps.Enabled {
+		// Remove .gridops.yaml if it was created but GridOps is disabled
+		// This handles the case where it might have been created by applyTree because it exists in templates
+		// but we don't want it in the output if not enabled.
+		return fs.Remove(".gridops.yaml")
+	}
+	return nil
 }
 
 func applyGlobal(fs afero.Fs, p plan.Component, turbo *plan.TurboConfig, tfBox, commonBox, turboComponentBox fs.FS) error {

@@ -108,9 +108,10 @@ func TestValidateGridEndpointRequired(t *testing.T) {
 	req := require.New(t)
 	enabled := true
 	c := &Config{
+		Grid: &GridGlobal{},
 		Defaults: Defaults{
 			Common: Common{
-				Grid: &GridConfig{Enabled: &enabled},
+				Grid: &GridCommon{Enabled: &enabled},
 			},
 		},
 	}
@@ -123,9 +124,10 @@ func TestValidateGridEndpointProvided(t *testing.T) {
 	enabled := true
 	endpoint := "https://example"
 	c := &Config{
+		Grid: &GridGlobal{Endpoint: &endpoint},
 		Defaults: Defaults{
 			Common: Common{
-				Grid: &GridConfig{Enabled: &enabled, Endpoint: &endpoint},
+				Grid: &GridCommon{Enabled: &enabled},
 			},
 		},
 	}
