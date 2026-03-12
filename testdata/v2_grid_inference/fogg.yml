@@ -6,7 +6,6 @@ defaults:
     profile: profile
   grid:
     enabled: true
-    endpoint: http://localhost:8080
   owner: foo@example.com
   project: proj
   tools:
@@ -25,6 +24,8 @@ defaults:
       region: us-west-2
       version: 0.12.0
   terraform_version: 0.100.0
+grid:
+  endpoint: http://localhost:8080
 global:
   grid:
     enabled: false

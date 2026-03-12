@@ -35,6 +35,7 @@ type Plan struct {
 	Turbo           *TurboConfig          `yaml:"turbo"`
 	Version         string                `yaml:"version"`
 	TFE             *TFEConfig            `yaml:"tfe"`
+	GridOps         GridOpsConfig         `yaml:"gridops"`
 }
 
 // Common represents common fields
@@ -441,6 +442,7 @@ func Eval(fs afero.Fs, c *v2.Config) (*Plan, error) {
 	p.CircleCI = p.buildCircleCIConfig(c, v)
 	p.GitHubActionsCI = p.buildGitHubActionsConfig(c, v)
 	p.Atlantis = p.buildAtlantisConfig(c)
+	p.GridOps = p.buildGridOpsConfig(c)
 	p.TFE, err = p.buildTFE(fs, c)
 	if err != nil {
 		return p, err
@@ -501,7 +503,7 @@ func (p *Plan) buildTFE(fs afero.Fs, c *v2.Config) (*TFEConfig, error) {
 		AdditionalGithubRequiredChecks: []string{},
 	}
 
-	tfeConfig.ComponentCommon = resolveComponentCommon(fs, "terraform/tfe", c.Defaults.Common, c.Global.Common, c.TFE.Common)
+	tfeConfig.ComponentCommon = resolveComponentCommon(c.Grid, fs, "terraform/tfe", c.Defaults.Common, c.Global.Common, c.TFE.Common)
 	tfeConfig.ModuleSource = c.TFE.ModuleSource
 	tfeConfig.ModuleName = c.TFE.ModuleName
 
@@ -557,7 +559,7 @@ func (p *Plan) buildAccounts(fs afero.Fs, c *v2.Config) map[string]Account {
 		accountPlan := Account{}
 
 		path := fmt.Sprintf("terraform/accounts/%s", name)
-		accountPlan.ComponentCommon = resolveComponentCommon(fs, path, defaults.Common, acct.Common)
+		accountPlan.ComponentCommon = resolveComponentCommon(c.Grid, fs, path, defaults.Common, acct.Common)
 		accountPlan.Name = name
 		accountPlan.Account = name // for backwards compat
 		accountPlan.Env = "accounts"
@@ -568,7 +570,7 @@ func (p *Plan) buildAccounts(fs afero.Fs, c *v2.Config) map[string]Account {
 			accountPlan.ComponentCommon.Backend.Remote.Workspace = fmt.Sprintf("accounts-%s", name)
 		} else if accountPlan.ComponentCommon.Backend.Kind == BackendKindHTTP {
 			// HTTP backend logic is handled in resolveComponentCommon, but set LogicalID here
-			gridConfig := v2.ResolveGrid(defaults.Common, acct.Common)
+			gridConfig := v2.ResolveGrid(c.Grid, defaults.Common, acct.Common)
 			project := v2.ResolveLogicalIDProject(gridConfig, accountPlan.ComponentCommon.Project)
 			account := v2.ResolveLogicalIDAccount(gridConfig, name)
 			accountPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-accounts-%s", project, account)
@@ -693,7 +695,7 @@ func (p *Plan) buildGlobal(fs afero.Fs, conf *v2.Config) Component {
 	global := conf.Global
 
 	path := "terraform/global"
-	componentPlan.ComponentCommon = resolveComponentCommon(fs, path, defaults.Common, global.Common)
+	componentPlan.ComponentCommon = resolveComponentCommon(conf.Grid, fs, path, defaults.Common, global.Common)
 
 	if componentPlan.ComponentCommon.Backend.Kind == BackendKindS3 {
 		componentPlan.ComponentCommon.Backend.S3.KeyPath = fmt.Sprintf("terraform/%s/global.tfstate", componentPlan.ComponentCommon.Project)
@@ -701,7 +703,7 @@ func (p *Plan) buildGlobal(fs afero.Fs, conf *v2.Config) Component {
 		componentPlan.ComponentCommon.Backend.Remote.Workspace = "global"
 	} else if componentPlan.ComponentCommon.Backend.Kind == BackendKindHTTP {
 		// HTTP backend logic is handled in resolveComponentCommon, but set LogicalID here
-		gridConfig := v2.ResolveGrid(defaults.Common, global.Common)
+		gridConfig := v2.ResolveGrid(conf.Grid, defaults.Common, global.Common)
 		project := v2.ResolveLogicalIDProject(gridConfig, componentPlan.ComponentCommon.Project)
 		componentPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-global", project)
 	}
@@ -732,7 +734,7 @@ func (p *Plan) buildEnvs(fs afero.Fs, conf *v2.Config) (map[string]Env, error) {
 			}
 
 			path := fmt.Sprintf("terraform/envs/%s/%s", envName, componentName)
-			componentPlan.ComponentCommon = resolveComponentCommon(fs, path, defaults.Common, envConf.Common, componentConf.Common)
+			componentPlan.ComponentCommon = resolveComponentCommon(conf.Grid, fs, path, defaults.Common, envConf.Common, componentConf.Common)
 			accountDependencies := v2.ResolveDependencyList(v2.DependsOnAccountsGetter, defaults.Common, envConf.Common, componentConf.Common)
 			accountRemoteStates := dependencyListKeys(accountDependencies)
 			accountBackends := map[string]Backend{}
@@ -752,7 +754,7 @@ func (p *Plan) buildEnvs(fs afero.Fs, conf *v2.Config) (map[string]Env, error) {
 				componentPlan.ComponentCommon.Backend.Remote.Workspace = fmt.Sprintf("%s-%s", envName, componentName)
 			} else if componentPlan.ComponentCommon.Backend.Kind == BackendKindHTTP {
 				// HTTP backend logic is handled in resolveComponentCommon, but set LogicalID here
-				gridConfig := v2.ResolveGrid(defaults.Common, envConf.Common, componentConf.Common)
+				gridConfig := v2.ResolveGrid(conf.Grid, defaults.Common, envConf.Common, componentConf.Common)
 				project := v2.ResolveLogicalIDProject(gridConfig, componentPlan.ComponentCommon.Project)
 				env := v2.ResolveLogicalIDEnv(gridConfig, envName)
 				componentPlan.ComponentCommon.Backend.HTTP.LogicalID = fmt.Sprintf("%s-%s-%s", project, env, componentName)
@@ -938,7 +940,7 @@ func resolveAWSProvider(commons ...v2.Common) (plan *AWSProvider, providers []AW
 	return
 }
 
-func resolveComponentCommon(fs afero.Fs, path string, commons ...v2.Common) ComponentCommon {
+func resolveComponentCommon(gridGlobal *v2.GridGlobal, fs afero.Fs, path string, commons ...v2.Common) ComponentCommon {
 	providerVersions := copyMap(utilityProviders)
 	awsPlan, additionalProviders, awsVersion := resolveAWSProvider(commons...)
 	if awsVersion != nil {
@@ -1418,7 +1420,7 @@ func resolveComponentCommon(fs afero.Fs, path string, commons ...v2.Common) Comp
 	}
 
 	project := v2.ResolveRequiredString(v2.ProjectGetter, commons...)
-	gridConf := v2.ResolveGrid(commons...)
+	gridConf := v2.ResolveGrid(gridGlobal, commons...)
 
 	backendConf := v2.ResolveBackend(commons...)
 	var backend Backend

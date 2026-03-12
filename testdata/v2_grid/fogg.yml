@@ -6,7 +6,6 @@ defaults:
     profile: profile
   grid:
     enabled: false
-    endpoint: http://localhost:8080
   owner: foo@example.com
   project: proj
   tools:
@@ -25,6 +24,8 @@ defaults:
       region: us-west-2
       version: 0.12.0
   terraform_version: 0.100.0
+grid:
+  endpoint: http://localhost:8080
 global:
   grid:
     enabled: true
@@ -38,7 +39,6 @@ envs:
         grid:
           enabled: true
           guid: "11111111-2222-3333-4444-555555555555"
-          project: foo
         modules:
           - name: "vpc"
             source: "terraform-aws-modules/vpc/aws"

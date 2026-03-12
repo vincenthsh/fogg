@@ -78,6 +78,11 @@ type TravisCIConfig struct {
 	CIConfig
 }
 
+type GridOpsConfig struct {
+	Enabled   bool
+	ServerURL string
+}
+
 func (c *CIConfig) populateBuckets(numBuckets int) *CIConfig {
 	sort.SliceStable(c.projects, func(i, j int) bool {
 		return c.projects[i].Name < c.projects[j].Name
@@ -651,5 +656,20 @@ func (p *Plan) buildGithubActionsPreCommitConfig(c *v2.Config, foggVersion strin
 		GitHubActionSteps:  steps,
 		HooksSkippedInMake: hooksSkippedInMake,
 		ExtraArgs:          extraArgs,
+	}
+}
+
+func (p *Plan) buildGridOpsConfig(c *v2.Config) GridOpsConfig {
+	enabled := false
+	serverURL := ""
+
+	if c.Grid != nil && c.Grid.Endpoint != nil && *c.Grid.Endpoint != "" {
+		enabled = true
+		serverURL = *c.Grid.Endpoint
+	}
+
+	return GridOpsConfig{
+		Enabled:   enabled,
+		ServerURL: serverURL,
 	}
 }

@@ -1,12 +1,27 @@
 package v2
 
-func ResolveGrid(commons ...Common) *GridConfig {
+func ResolveGrid(global *GridGlobal, commons ...Common) *GridConfig {
 	var enabled *bool
 	var guid *string
 	var endpoint *string
 	var project *string
 	var envMap map[string]string
 	var accountMap map[string]string
+
+	if global != nil {
+		if global.Endpoint != nil {
+			endpoint = global.Endpoint
+		}
+		if global.Project != nil {
+			project = global.Project
+		}
+		if global.EnvMap != nil {
+			envMap = global.EnvMap
+		}
+		if global.AccountMap != nil {
+			accountMap = global.AccountMap
+		}
+	}
 
 	for _, c := range commons {
 		if c.Grid != nil {
@@ -15,18 +30,6 @@ func ResolveGrid(commons ...Common) *GridConfig {
 			}
 			if c.Grid.GUID != nil {
 				guid = c.Grid.GUID
-			}
-			if c.Grid.Endpoint != nil {
-				endpoint = c.Grid.Endpoint
-			}
-			if c.Grid.Project != nil {
-				project = c.Grid.Project
-			}
-			if c.Grid.EnvMap != nil {
-				envMap = c.Grid.EnvMap
-			}
-			if c.Grid.AccountMap != nil {
-				accountMap = c.Grid.AccountMap
 			}
 		}
 	}
