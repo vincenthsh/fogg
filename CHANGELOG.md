@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.93.1](https://github.com/vincenthsh/fogg/compare/v0.93.0...v0.93.1) (2026-06-30)
+
+
+### BugFixes
+
+* pin generated components to @vincenthsh/cdktf-fogg-helpers ^3.0.0 ([#481](https://github.com/vincenthsh/fogg/issues/481)) ([89ffa39](https://github.com/vincenthsh/fogg/commit/89ffa3904ebfb95e8ad3f675a4cb82ffeae3ff67))
+
 ## [0.93.0](https://github.com/vincenthsh/fogg/compare/v0.92.31...v0.93.0) (2026-06-30)
 
 
