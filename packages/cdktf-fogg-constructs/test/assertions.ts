@@ -3,8 +3,8 @@ import {
   StackAnnotation,
   TerraformStack,
   Testing,
-} from 'cdktf'
-import { TerraformConstructor } from 'cdktf/lib/testing/matchers'
+} from 'cdktn'
+import { TerraformConstructor } from 'cdktn/lib/testing/matchers'
 import { MetadataEntry } from 'constructs'
 import { Assertion, expect } from 'vitest'
 

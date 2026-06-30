@@ -1,2 +1,16 @@
 packages:
   - "packages/*"
+
+# Native deps whose install/build scripts we allow to run (pnpm blocks build
+# scripts by default). All three ship native binaries used by the toolchain.
+allowBuilds:
+  "@biomejs/biome": true
+  "@swc/core": true
+  esbuild: true
+
+# Supply-chain: a global `minimumReleaseAge` cooldown is enforced on this machine.
+# Exempt our own org packages (cdktn-io / TerraConstructs) that are intentionally
+# consumed immediately after release during the cdktn migration.
+minimumReleaseAgeExclude:
+  - "@cdktn/vitest"
+  - "terraconstructs"

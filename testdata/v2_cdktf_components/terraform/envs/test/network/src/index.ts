@@ -3,7 +3,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { App } from "cdktf/lib/app";
+import { App } from "cdktn/lib/app";
 import { ComponentStack } from "./stack";
 
 const outdir = "cdktf.out";

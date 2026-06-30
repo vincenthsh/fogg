@@ -59,6 +59,7 @@ type TurboConfig struct {
 	RootName                string
 	SCMBase                 string
 	DevDependencies         map[string]string
+	PnpmOverrides           map[string]string
 	CdktfPackages           []string
 	Workspaces              []vsCodeWorkspace
 	Scopes                  map[string]jsScope
@@ -412,6 +413,28 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		DevDependencies: map[string]string{
 			"turbo": "^2.4.0", // https://github.com/vercel/turborepo/releases
 		},
+		// Transitional cdktf->cdktn dual-dependency bridge: cdktf is deprecated and
+		// cdktn is the community fork. Constructs published by other teams still
+		// declare cdktf / @cdktf/provider-* as peer dependencies; these pnpm overrides
+		// alias them to the @cdktn equivalents so they resolve against the migrated
+		// tree. See https://cdktn.io/docs/release/upgrade-guide-v0-22 (Dual Dependencies).
+		// NOTE: emitted in the root package.json (pnpm.overrides) for pnpm 9.15.4; move
+		// to pnpm-workspace.yaml after the pnpm 10+ bump (vincenthsh/fogg#479).
+		PnpmOverrides: map[string]string{
+			"cdktf":                      "npm:cdktn@^0.23.3",
+			"@cdktf/provider-aws":        "npm:@cdktn/provider-aws@^24.8.0",
+			"@cdktf/provider-cloudflare": "npm:@cdktn/provider-cloudflare@^15.2.1",
+			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^15.4.0",
+			"@cdktf/provider-random":     "npm:@cdktn/provider-random@^14.1.0",
+			"@cdktf/provider-cloudinit":  "npm:@cdktn/provider-cloudinit@^13.1.0",
+			"@cdktf/provider-archive":    "npm:@cdktn/provider-archive@^13.1.0",
+			"@cdktf/provider-time":       "npm:@cdktn/provider-time@^13.1.0",
+			"@cdktf/provider-docker":     "npm:@cdktn/provider-docker@^15.3.0",
+			"@cdktf/provider-tls":        "npm:@cdktn/provider-tls@^13.1.0",
+			"@cdktf/provider-null":       "npm:@cdktn/provider-null@^13.1.0",
+			"@cdktf/provider-external":   "npm:@cdktn/provider-external@^13.1.0",
+			"@cdktf/provider-local":      "npm:@cdktn/provider-local@^13.1.0",
+		},
 		CodeArtifactLoginScript: noCALoginRequired,
 	}
 
@@ -440,6 +463,11 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 
 		for _, dep := range c.Turbo.DevDependencies {
 			turboConfig.DevDependencies[dep.Name] = dep.Version
+		}
+
+		// merge/override the transitional cdktf->cdktn dual-dependency defaults
+		for _, dep := range c.Turbo.PnpmOverrides {
+			turboConfig.PnpmOverrides[dep.Name] = dep.Version
 		}
 
 		pkgs := []string{}

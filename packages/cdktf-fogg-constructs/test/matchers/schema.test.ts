@@ -1,5 +1,5 @@
 import * as path from 'node:path'
-import { TerraformOutput, Testing } from 'cdktf'
+import { TerraformOutput, Testing } from 'cdktn'
 import { describe, expect, it } from 'vitest'
 import {
   SchemaVitestMatchers,

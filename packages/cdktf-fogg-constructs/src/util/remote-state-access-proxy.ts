@@ -1,5 +1,5 @@
-import { DataTerraformRemoteState, StringListMap, Token } from 'cdktf'
-import { Fn } from 'cdktf'
+import { DataTerraformRemoteState, StringListMap, Token } from 'cdktn'
+import { Fn } from 'cdktn'
 
 export interface ListOutput<T = string> {
   /**

@@ -1,9 +1,9 @@
-// // Or publish cdktf module as HCL module for non CDKTF usage
-// import { TFModuleStack, TFModuleVariable, ProviderRequirement } from "@cdktf/tf-module-stack";
+// // Or publish cdktn module as HCL module for non CDKTN usage
+// import { TFModuleStack, TFModuleVariable, ProviderRequirement } from "@cdktn/tf-module-stack";
 import {
   TerraformElement,
   // TerraformHclModule,
-} from "cdktf";
+} from "cdktn";
 import { Construct } from "constructs";
 
 export interface MyConstructProps {

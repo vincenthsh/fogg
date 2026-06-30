@@ -1,6 +1,6 @@
-import { provider as awsProvider } from '@cdktf/provider-aws'
-import { provider as cloudflareProvider } from '@cdktf/provider-cloudflare'
-import { provider as dataDogProvider } from '@cdktf/provider-datadog'
+import { provider as awsProvider } from '@cdktn/provider-aws'
+import { provider as cloudflareProvider } from '@cdktn/provider-cloudflare'
+import { provider as dataDogProvider } from '@cdktn/provider-datadog'
 import {
   DataTerraformRemoteState,
   DataTerraformRemoteStateS3,
@@ -9,7 +9,7 @@ import {
   S3BackendConfig,
   TerraformHclModule,
   TerraformLocal,
-} from 'cdktf'
+} from 'cdktn'
 import { Construct } from 'constructs'
 import { AwsStack, AwsStackProps } from 'terraconstructs/lib/aws'
 import { type FoggStackProps, IFoggStack } from './fogg-stack'
@@ -54,6 +54,13 @@ export class FoggTerraStack extends AwsStack implements IFoggStack {
       providerConfig: awsProviderConfig,
     })
     this.foggComp = foggComp
+
+    // terraconstructs >=0.2.5 creates the default AWS provider lazily (only on
+    // first access of `this.provider`/`region`/etc.). Fogg components must always
+    // emit their configured AWS provider (assume_role / region / default_tags),
+    // even when they wrap only HCL modules that never touch the provider — so
+    // materialize it eagerly here to preserve pre-0.2.5 behavior.
+    void this.provider
 
     this.parseBackendConfig()
     this.parseBundledProviderConfig()
