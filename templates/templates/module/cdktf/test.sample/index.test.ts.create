@@ -1,6 +1,6 @@
-import { Testing } from "cdktf";
+import { Testing } from "cdktn";
 import { describe, it, expect } from "vitest";
-import "cdktf/lib/testing/adapters/jest";
+import "cdktn/lib/testing/adapters/jest";
 import { MyConstruct } from "../src";
 
 // To learn more about testing see cdk.tf/testing

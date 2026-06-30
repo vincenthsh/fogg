@@ -1,6 +1,6 @@
 {
   "name": "@vincenthsh/cdktf-fogg-helpers",
-  "version": "1.5.2",
+  "version": "2.0.0",
   "description": "Fogg CDKTF Helpers.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -30,29 +30,29 @@
   },
   "homepage": "https://github.com/vincenthsh/fogg#readme",
   "engines": {
-    "node": ">=18.16.1"
+    "node": ">=20.16.0"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
     "ts-morph": "^25.0.1"
   },
   "peerDependencies": {
-    "@cdktf/provider-aws": "^19.50.0",
-    "@cdktf/provider-cloudflare": "^11.29.0",
-    "@cdktf/provider-datadog": "^11.17.2",
-    "cdktf": "^0.20.11",
-    "constructs": "^10.4.0",
-    "terraconstructs": "^0.0.11"
+    "@cdktn/provider-aws": "^24.8.0",
+    "@cdktn/provider-cloudflare": "^15.2.1",
+    "@cdktn/provider-datadog": "^15.4.0",
+    "cdktn": "^0.23.3",
+    "constructs": "^10.6.0",
+    "terraconstructs": "^0.2.5"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^18.19.75",
+    "@types/node": "^20.17.16",
     "@vincenthsh/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
-    "cdktf-cli": "^0.20.11",
-    "cdktf-vitest": "^0.1.2",
+    "cdktn-cli": "^0.23.3",
+    "@cdktn/vitest": "^0.1.0",
     "deepmerge": "4.3.1",
-    "typescript": "5.7.3",
+    "typescript": "5.9.2",
     "unplugin-swc": "^1.5.1",
     "vitest": "^2.1.9"
   },

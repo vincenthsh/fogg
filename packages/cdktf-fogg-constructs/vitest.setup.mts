@@ -1,4 +1,4 @@
-// refer to: https://github.com/duniul/cdktf-vitest
-import { setupCdktfVitest } from 'cdktf-vitest'
+// refer to: https://cdktn.io/docs/test/unit-tests#write-assertions
+import { setupVitest } from '@cdktn/vitest'
 
-setupCdktfVitest()
+setupVitest()

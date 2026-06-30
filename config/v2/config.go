@@ -583,6 +583,10 @@ type TurboConfig struct {
 
 	Scopes          []JavascriptPackageScope `yaml:"scopes,omitempty"`           // Optional additional scopes, default: []
 	DevDependencies []JavascriptDependency   `yaml:"dev_dependencies,omitempty"` // Optional additional root dev dependencies, default: []
+	// Optional additional/overriding pnpm overrides, merged over the transitional
+	// cdktf->cdktn dual-dependency defaults. Name is the package to override, Version
+	// is the replacement spec (e.g. "npm:@cdktn/provider-foo@^13.1.0"). default: []
+	PnpmOverrides []JavascriptDependency `yaml:"pnpm_overrides,omitempty"`
 }
 
 type JavascriptDependency struct {

@@ -122,11 +122,11 @@ provider_versions:
         version: ~> 3.0
 integration_registry: null
 cdktf_dependencies:
-    '@cdktf/provider-aws': ^19.29.0
-    '@cdktf/provider-cloudflare': ^11.16.0
-    '@cdktf/provider-datadog': ^11.8.0
-    cdktf: ^0.20.8
-    constructs: ^10.3.0
+    '@cdktn/provider-aws': ^24.8.0
+    '@cdktn/provider-cloudflare': ^15.2.1
+    '@cdktn/provider-datadog': ^15.4.0
+    cdktn: ^0.23.3
+    constructs: ^10.6.0
     js-yaml: ^4.1.0
 cdktf_dev_dependencies:
     '@swc/core': ^1.7.6

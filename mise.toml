@@ -1,0 +1,10 @@
+# Tool versions for fogg.
+# node + pnpm are delegated to their idiomatic version files:
+#   - node  -> .nvmrc
+#   - pnpm  -> package.json "packageManager"
+# so those files stay the single source of truth (also honored by nvm / corepack / CI).
+[settings]
+idiomatic_version_file_enable_tools = ["node", "pnpm"]
+
+[tools]
+terraform = "1.7.5"  # match defaults.terraform_version used across testdata

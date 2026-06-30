@@ -1,6 +1,6 @@
-import { provider as awsProvider } from '@cdktf/provider-aws'
-import { provider as cloudflareProvider } from '@cdktf/provider-cloudflare'
-import { provider as dataDogProvider } from '@cdktf/provider-datadog'
+import { provider as awsProvider } from '@cdktn/provider-aws'
+import { provider as cloudflareProvider } from '@cdktn/provider-cloudflare'
+import { provider as dataDogProvider } from '@cdktn/provider-datadog'
 import {
   DataTerraformRemoteState,
   DataTerraformRemoteStateS3,
@@ -10,7 +10,7 @@ import {
   TerraformHclModule,
   TerraformLocal,
   TerraformStack,
-} from 'cdktf'
+} from 'cdktn'
 import { Construct, IConstruct } from 'constructs'
 import {
   AWSProvider,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import 'cdktf/lib/testing/adapters/jest'
-import { App, TerraformOutput, Testing } from 'cdktf'
+import 'cdktn/lib/testing/adapters/jest'
+import { App, TerraformOutput, Testing } from 'cdktn'
 import merge from 'deepmerge'
 import { FoggStack } from '../src/fogg-stack'
 import type { Component } from '../src/imports/fogg-types.generated'
@@ -669,7 +669,7 @@ describe('FoggStack', () => {
       terraform: {
         required_providers: {
           aws: {
-            source: 'aws',
+            source: 'hashicorp/aws',
           },
           cloudflare: {
             source: 'cloudflare/cloudflare',

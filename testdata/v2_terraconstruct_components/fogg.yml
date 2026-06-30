@@ -27,6 +27,10 @@ defaults:
   terraform_version: 1.7.5
 turbo:
   enabled: true
+  # extend the default cdktf->cdktn override bridge with an extra provider alias
+  pnpm_overrides:
+    - name: "@cdktf/provider-kubernetes"
+      version: "npm:@cdktn/provider-kubernetes@^15.1.0"
 envs:
   test:
     components:
@@ -51,7 +55,7 @@ modules:
     kind: cdktf # this is still a CDKTF module
     package_name: "my-terraconstruct-foo"
     cdktf_dependencies:
-      - name: "@cdktf/provider-aws"
-        version: "^19.34.0"
+      - name: "@cdktn/provider-aws"
+        version: "^24.8.0"
       - name: "terraconstructs"
-        version: "0.0.9"
+        version: "^0.2.5"
