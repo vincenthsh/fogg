@@ -1,0 +1,61 @@
+name: force-publish
+
+# Manually (re-)publish workspace npm packages out-of-band from release-please.
+#
+# Why this exists: the `release-please` workflow gates publishing on
+# `steps.release.outputs.release_created`, which is only true the first time a
+# release PR merges. If `pnpm publish` itself fails (e.g. a bad/expired
+# NPM_TOKEN), re-running that job does NOT re-publish — release-please reports
+# the release already exists and every downstream step is skipped. This
+# workflow lets you force the publish after fixing the token, opting in per
+# package, with a dry-run guard on by default.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cdktf_fogg_helpers:
+        description: "Publish @vincenthsh/cdktf-fogg-helpers"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Dry run (pack only, no publish). Uncheck to actually publish."
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  force-publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup pnpm from .packageManager
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Publish @vincenthsh/cdktf-fogg-helpers
+        if: ${{ inputs.cdktf_fogg_helpers }}
+        run: >-
+          pnpm --filter @vincenthsh/cdktf-fogg-helpers publish
+          --no-git-checks
+          ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          # setup-node writes the auth-configured .npmrc; pnpm falls back to this
+          # token when OIDC trusted publishing is not available.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

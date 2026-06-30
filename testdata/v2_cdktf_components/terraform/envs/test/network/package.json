@@ -16,7 +16,7 @@
     "@cdktn/provider-aws": "^24.8.0",
     "@cdktn/provider-cloudflare": "^15.2.1",
     "@cdktn/provider-datadog": "^15.4.0",
-    "@vincenthsh/cdktf-fogg-helpers": "^2.0.0",
+    "@vincenthsh/cdktf-fogg-helpers": "^3.0.0",
     "cdktn": "^0.23.3",
     "constructs": "^10.6.0"
   },

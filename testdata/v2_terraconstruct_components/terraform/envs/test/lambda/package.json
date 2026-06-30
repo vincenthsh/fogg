@@ -17,7 +17,7 @@
     "@cdktn/provider-cloudflare": "^15.2.1",
     "@cdktn/provider-datadog": "^15.4.0",
     "@types/aws-lambda": "^8.10.76",
-    "@vincenthsh/cdktf-fogg-helpers": "^2.0.0",
+    "@vincenthsh/cdktf-fogg-helpers": "^3.0.0",
     "cdktn": "^0.23.3",
     "constructs": "^10.6.0",
     "terraconstructs": "^0.2.5"
