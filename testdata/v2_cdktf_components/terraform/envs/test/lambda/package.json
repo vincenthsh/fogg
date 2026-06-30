@@ -18,7 +18,7 @@
     "@cdktn/provider-datadog": "^15.4.0",
     "@myorg/my-cdktf-constructs": "^1.0.0",
     "@types/aws-lambda": "^8.10.76",
-    "@vincenthsh/cdktf-fogg-helpers": "^2.0.0",
+    "@vincenthsh/cdktf-fogg-helpers": "^3.0.0",
     "cdktn": "^0.23.3",
     "constructs": "^10.6.0",
     "esbuild-wasm": "^0.23.0",

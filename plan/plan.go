@@ -723,7 +723,7 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 			componentPlan.PathToRepoRoot = "../../../../"
 			componentPlan.CdktfDependencies = map[string]string{
 				// from packages/cdktf-fogg-constructs
-				"@vincenthsh/cdktf-fogg-helpers": "^2.0.0",
+				"@vincenthsh/cdktf-fogg-helpers": "^3.0.0",
 				"@cdktn/provider-aws":            "^24.8.0", // @vincenthsh/cdktf-fogg-helpers peer dependency (AWS provider v6)
 				"@cdktn/provider-cloudflare":     "^15.2.1", // @vincenthsh/cdktf-fogg-helpers peer dependency
 				"@cdktn/provider-datadog":        "^15.4.0", // @vincenthsh/cdktf-fogg-helpers peer dependency
