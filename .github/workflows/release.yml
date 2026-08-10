@@ -51,7 +51,7 @@ jobs:
       # - https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-nodejs-packages#publishing-packages-to-github-packages
       # - https://pnpm.io/using-changesets#publishing
       - name: Setup pnpm from .packageManager
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
         with:
           run_install: false
         if: ${{ steps.release.outputs.release_created }}
