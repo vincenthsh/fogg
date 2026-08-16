@@ -11,7 +11,7 @@
     "clean": "turbo clean && rm -rf node_modules"
   },
   "engines": {
-    "node": "20"
+    "node": {{ .NodeVersion | quote }}
   },
   "devDependencies": {{ .DevDependencies | toPrettyJson | indent 2 }},
   "packageManager": "pnpm@9.15.4",

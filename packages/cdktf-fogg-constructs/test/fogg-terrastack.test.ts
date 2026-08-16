@@ -23,8 +23,11 @@ vi.mock(import('../src/util/load-component-config'), async (importOriginal) => {
 import { loadComponentConfig as mockedLoadCompCfg } from '../src/util/load-component-config'
 const loadComponentConfig = mockedLoadCompCfg as ReturnType<typeof vi.fn>
 
-// Prefix for resource UUID, should never change for component lifecycle
-const gridUUID = '123-456'
+// Prefix for resource UUID, should never change for component lifecycle.
+// Must be letter-leading: terraconstructs >= 0.2.8 validates gridUUID against
+// /^[A-Za-z][A-Za-z0-9-]*$/ because it is used as a physical-name prefix for
+// resources (IAM, CloudWatch) that require names to begin with a letter.
+const gridUUID = 'g123-456'
 // This is used as a tag and may change over time
 const environmentName = 'development'
 let app: App

@@ -58,6 +58,7 @@ type TurboConfig struct {
 	Version                 string
 	RootName                string
 	SCMBase                 string
+	NodeVersion             string
 	DevDependencies         map[string]string
 	PnpmOverrides           map[string]string
 	CdktfPackages           []string
@@ -407,9 +408,10 @@ type vsCodeWorkspace struct {
 
 func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 	turboConfig := &TurboConfig{
-		Enabled:  false,
-		SCMBase:  "main",
-		RootName: "fogg-monorepo",
+		Enabled:     false,
+		SCMBase:     "main",
+		RootName:    "fogg-monorepo",
+		NodeVersion: "22", // cdktn 0.24 / terraconstructs 0.2.17 require node >=22.12.0
 		DevDependencies: map[string]string{
 			"turbo": "^2.4.0", // https://github.com/vercel/turborepo/releases
 		},
@@ -420,20 +422,45 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		// tree. See https://cdktn.io/docs/release/upgrade-guide-v0-22 (Dual Dependencies).
 		// NOTE: emitted in the root package.json (pnpm.overrides) for pnpm 9.15.4; move
 		// to pnpm-workspace.yaml after the pnpm 10+ bump (vincenthsh/fogg#479).
+		//
+		// Both key forms are required, and they are not redundant:
+		//   - the @cdktf/* alias keys redirect third-party constructs that still declare
+		//     the deprecated cdktf packages as peers;
+		//   - the bare @cdktn/* keys pin packages that already declare the cdktn names
+		//     directly (terraconstructs peer-depends on @cdktn/provider-{archive,aws,
+		//     cloudinit,docker,time,tls}). Alias keys alone leave those unpinned, which
+		//     resolves a second copy of the same bindings under a different version and
+		//     breaks jsii type identity at synth time.
+		// Pin cdktn and constructs themselves for the same reason: a caret-only bridge
+		// lets two cdktn patch releases coexist in one tree.
 		PnpmOverrides: map[string]string{
-			"cdktf":                      "npm:cdktn@^0.23.3",
-			"@cdktf/provider-aws":        "npm:@cdktn/provider-aws@^24.8.0",
-			"@cdktf/provider-cloudflare": "npm:@cdktn/provider-cloudflare@^15.2.1",
-			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^15.4.0",
-			"@cdktf/provider-random":     "npm:@cdktn/provider-random@^14.1.0",
-			"@cdktf/provider-cloudinit":  "npm:@cdktn/provider-cloudinit@^13.1.0",
-			"@cdktf/provider-archive":    "npm:@cdktn/provider-archive@^13.1.0",
-			"@cdktf/provider-time":       "npm:@cdktn/provider-time@^13.1.0",
-			"@cdktf/provider-docker":     "npm:@cdktn/provider-docker@^15.3.0",
-			"@cdktf/provider-tls":        "npm:@cdktn/provider-tls@^13.1.0",
-			"@cdktf/provider-null":       "npm:@cdktn/provider-null@^13.1.0",
-			"@cdktf/provider-external":   "npm:@cdktn/provider-external@^13.1.0",
-			"@cdktf/provider-local":      "npm:@cdktn/provider-local@^13.1.0",
+			"cdktf":                      "npm:cdktn@^0.24.0",
+			"cdktn":                      "^0.24.0",
+			"constructs":                 "^10.7.2",
+			"@cdktf/provider-aws":        "npm:@cdktn/provider-aws@^25.0.0",
+			"@cdktf/provider-cloudflare": "npm:@cdktn/provider-cloudflare@^16.0.0",
+			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^16.0.0",
+			"@cdktf/provider-random":     "npm:@cdktn/provider-random@^15.0.0",
+			"@cdktf/provider-cloudinit":  "npm:@cdktn/provider-cloudinit@^14.0.0",
+			"@cdktf/provider-archive":    "npm:@cdktn/provider-archive@^14.0.0",
+			"@cdktf/provider-time":       "npm:@cdktn/provider-time@^14.0.0",
+			"@cdktf/provider-docker":     "npm:@cdktn/provider-docker@^16.0.0",
+			"@cdktf/provider-tls":        "npm:@cdktn/provider-tls@^14.0.0",
+			"@cdktf/provider-null":       "npm:@cdktn/provider-null@^15.0.0",
+			"@cdktf/provider-external":   "npm:@cdktn/provider-external@^14.0.0",
+			"@cdktf/provider-local":      "npm:@cdktn/provider-local@^14.0.0",
+			"@cdktn/provider-aws":        "^25.0.0",
+			"@cdktn/provider-cloudflare": "^16.0.0",
+			"@cdktn/provider-datadog":    "^16.0.0",
+			"@cdktn/provider-random":     "^15.0.0",
+			"@cdktn/provider-cloudinit":  "^14.0.0",
+			"@cdktn/provider-archive":    "^14.0.0",
+			"@cdktn/provider-time":       "^14.0.0",
+			"@cdktn/provider-docker":     "^16.0.0",
+			"@cdktn/provider-tls":        "^14.0.0",
+			"@cdktn/provider-null":       "^15.0.0",
+			"@cdktn/provider-external":   "^14.0.0",
+			"@cdktn/provider-local":      "^14.0.0",
 		},
 		CodeArtifactLoginScript: noCALoginRequired,
 	}
@@ -453,6 +480,10 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 
 		if c.Turbo.RootName != nil {
 			turboConfig.RootName = *c.Turbo.RootName
+		}
+
+		if c.Turbo.NodeVersion != nil {
+			turboConfig.NodeVersion = *c.Turbo.NodeVersion
 		}
 
 		if c.Turbo.Scopes != nil {

@@ -596,15 +596,15 @@ func (p *Plan) buildModules(c *v2.Config) map[string]Module {
 		modulePlan.CdktfDependencies = map[string]string{}
 		modulePlan.CdktfPeerDependencies = map[string]string{
 			// cdktf is deprecated; cdktn is the community fork (CDK Terrain)
-			"cdktn":      "^0.23.3",
-			"constructs": "^10.6.0",
+			"cdktn":      "^0.24.0",
+			"constructs": "^10.7.2",
 		}
 		modulePlan.CdktfDevDependencies = map[string]string{
 			"@swc/core":           "^1.10.12",
-			"@types/node":         "^20.17.16",
-			"constructs":          "^10.6.0",
-			"cdktn":               "^0.23.3",
-			"cdktn-cli":           "^0.23.3", // required to run cdktn get
+			"@types/node":         "^22.10.0", // cdktn 0.24 requires node >=22.12.0
+			"constructs":          "^10.7.2",
+			"cdktn":               "^0.24.0",
+			"cdktn-cli":           "^0.24.0", // required to run cdktn get; engines: node >=22.19.0
 			"@cdktn/vitest":       "^0.1.0",  // org-owned vitest adapter (cdktn-io/cdktn-vitest); peer: vitest >= 2.1
 			"ts-node":             "^10.9.2",
 			"typescript":          "^5.9.2",
@@ -723,17 +723,17 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 			componentPlan.PathToRepoRoot = "../../../../"
 			componentPlan.CdktfDependencies = map[string]string{
 				// from packages/cdktf-fogg-constructs
-				"@vincenthsh/cdktf-fogg-helpers": "^3.0.0",
-				"@cdktn/provider-aws":            "^24.8.0", // @vincenthsh/cdktf-fogg-helpers peer dependency (AWS provider v6)
-				"@cdktn/provider-cloudflare":     "^15.2.1", // @vincenthsh/cdktf-fogg-helpers peer dependency
-				"@cdktn/provider-datadog":        "^15.4.0", // @vincenthsh/cdktf-fogg-helpers peer dependency
-				"cdktn":                          "^0.23.3",
-				"constructs":                     "^10.6.0",
+				"@vincenthsh/cdktf-fogg-helpers": "^4.0.0",
+				"@cdktn/provider-aws":            "^25.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency (AWS provider v6)
+				"@cdktn/provider-cloudflare":     "^16.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency
+				"@cdktn/provider-datadog":        "^16.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency
+				"cdktn":                          "^0.24.0",
+				"constructs":                     "^10.7.2",
 			}
 			componentPlan.CdktfDevDependencies = map[string]string{
 				"@swc/core":   "^1.10.12",
-				"@types/node": "^20.17.16",
-				"cdktn-cli":   "^0.23.3", // required to run `cdktn get`
+				"@types/node": "^22.10.0", // cdktn 0.24 requires node >=22.12.0
+				"cdktn-cli":   "^0.24.0",  // required to run `cdktn get`; engines: node >=22.19.0
 				"ts-node":     "^10.9.2",
 				"typescript":  "^5.9.2",
 				// eslint/prettier v9

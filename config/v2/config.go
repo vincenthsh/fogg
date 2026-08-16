@@ -580,6 +580,11 @@ type TurboConfig struct {
 	Version  *string `yaml:"version,omitempty"`   // Optional Turbo version, default: "^2.0.6"
 	RootName *string `yaml:"root_name,omitempty"` // Optional Name for the root package, default: "fogg-monorepo"
 	SCMBase  *string `yaml:"scm_base,omitempty"`  // Optional Git comparison base override, default: "main"
+	// Optional root package.json "engines.node" override, default: "22".
+	// cdktn 0.24 requires node >=22.12.0 and cdktn-cli 0.24 requires >=22.19.0, so the
+	// default is the lowest major satisfying the generated toolchain. Raise it to match
+	// the runtime that actually runs `synth` (e.g. an Atlantis AMI on node 24).
+	NodeVersion *string `yaml:"node_version,omitempty"`
 
 	Scopes          []JavascriptPackageScope `yaml:"scopes,omitempty"`           // Optional additional scopes, default: []
 	DevDependencies []JavascriptDependency   `yaml:"dev_dependencies,omitempty"` // Optional additional root dev dependencies, default: []
