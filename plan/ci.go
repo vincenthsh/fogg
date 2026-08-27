@@ -59,8 +59,11 @@ type TurboConfig struct {
 	RootName                string
 	SCMBase                 string
 	NodeVersion             string
+	PnpmVersion             string
 	DevDependencies         map[string]string
 	PnpmOverrides           map[string]string
+	PnpmAllowBuilds         []string
+	PnpmMinReleaseAgeExempt []string
 	CdktfPackages           []string
 	Workspaces              []vsCodeWorkspace
 	Scopes                  map[string]jsScope
@@ -401,6 +404,43 @@ func (p *Plan) buildGitHubActionsConfig(c *v2.Config, foggVersion string) GitHub
 
 const noCALoginRequired = "echo 'No CodeArtifact login required'"
 
+// mergeSorted unions defaults with repo-supplied additions, de-duplicated and
+// sorted so the generated pnpm-workspace.yaml is stable across runs.
+func mergeSorted(defaults, extra []string) []string {
+	seen := map[string]struct{}{}
+	for _, v := range append(append([]string{}, defaults...), extra...) {
+		if v != "" {
+			seen[v] = struct{}{}
+		}
+	}
+	if len(seen) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(seen))
+	for v := range seen {
+		out = append(out, v)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// nodeVersionFloor is the lowest Node release the generated cdktn toolchain
+// actually runs on: cdktn-cli 0.24 declares engines.node >=22.19.0 (plain
+// cdktn declares nothing, terraconstructs 0.2.17 wants >=22.12.0), so 22.19.0
+// is the binding constraint. engines.node is emitted as ">=" + this value; a
+// bare major like "22" would admit 22.0.0, which the toolchain rejects.
+//
+// templates/templates/turbo/root/.nvmrc.create must stay in sync with this
+// constant. That file is copied verbatim and only when absent (see the
+// ".create" branch in apply.applyTree), so it cannot be templated from here --
+// TestNvmrcMatchesNodeVersionFloor guards the pair instead.
+const nodeVersionFloor = "22.19.0"
+
+// pnpmVersion pins the packageManager field of generated repos. Must be >=10:
+// pnpm 10 stopped reading the "pnpm" key from package.json, which is where
+// overrides used to live, so fogg now emits them into pnpm-workspace.yaml.
+const pnpmVersion = "11.24.0"
+
 type vsCodeWorkspace struct {
 	Name string
 	Path string
@@ -411,7 +451,8 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		Enabled:     false,
 		SCMBase:     "main",
 		RootName:    "fogg-monorepo",
-		NodeVersion: "22", // cdktn 0.24 / terraconstructs 0.2.17 require node >=22.12.0
+		NodeVersion: ">=" + nodeVersionFloor,
+		PnpmVersion: pnpmVersion,
 		DevDependencies: map[string]string{
 			"turbo": "^2.4.0", // https://github.com/vercel/turborepo/releases
 		},
@@ -462,6 +503,13 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 			"@cdktn/provider-external":   "^14.0.0",
 			"@cdktn/provider-local":      "^14.0.0",
 		},
+		// pnpm >=10 blocks dependency build scripts by default. @swc/core is the
+		// only devDependency fogg itself emits that ships an install script (it is
+		// in both the module and component CdktfDevDependencies sets, and builds a
+		// native binding in postinstall). Without this pnpm halts the install with
+		// ERR_PNPM_IGNORED_BUILDS and writes its own placeholder entry into the
+		// generated pnpm-workspace.yaml, which the next `fogg apply` would discard.
+		PnpmAllowBuilds:         []string{"@swc/core"},
 		CodeArtifactLoginScript: noCALoginRequired,
 	}
 
@@ -500,6 +548,10 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		for _, dep := range c.Turbo.PnpmOverrides {
 			turboConfig.PnpmOverrides[dep.Name] = dep.Version
 		}
+
+		turboConfig.PnpmAllowBuilds = mergeSorted(turboConfig.PnpmAllowBuilds, c.Turbo.PnpmAllowBuilds)
+		turboConfig.PnpmMinReleaseAgeExempt = mergeSorted(
+			turboConfig.PnpmMinReleaseAgeExempt, c.Turbo.PnpmMinimumReleaseAgeExclude)
 
 		pkgs := []string{}
 		workspaces := []vsCodeWorkspace{}
