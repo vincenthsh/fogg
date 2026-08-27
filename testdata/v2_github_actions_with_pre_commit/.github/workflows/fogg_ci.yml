@@ -14,16 +14,16 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4.1.2
+      - uses: actions/checkout@v7.0.1
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.5.7
       - name: Cache Fogg
         id: cache-fogg
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.fogg/cache
           key: fogg-cache-${{ hashFiles('**/.fogg-version') }}
@@ -31,7 +31,7 @@ jobs:
           make setup
           echo "$(pwd)/.fogg/bin" >> "${GITHUB_PATH}"
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4.0.2
+        uses: aws-actions/configure-aws-credentials@v6.2.3
         with:
           role-to-assume: infraci
           aws-region: awsregion

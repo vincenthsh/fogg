@@ -30,26 +30,26 @@
   },
   "homepage": "https://github.com/vincenthsh/fogg#readme",
   "engines": {
-    "node": ">=20.16.0"
+    "node": ">=22.12.0"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
     "ts-morph": "^25.0.1"
   },
   "peerDependencies": {
-    "@cdktn/provider-aws": "^24.8.0",
-    "@cdktn/provider-cloudflare": "^15.2.1",
-    "@cdktn/provider-datadog": "^15.4.0",
-    "cdktn": "^0.23.3",
-    "constructs": "^10.6.0",
-    "terraconstructs": "^0.2.5"
+    "@cdktn/provider-aws": "^25.0.0",
+    "@cdktn/provider-cloudflare": "^16.0.0",
+    "@cdktn/provider-datadog": "^16.0.0",
+    "cdktn": "^0.24.0",
+    "constructs": "^10.7.2",
+    "terraconstructs": "^0.2.17"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.17.16",
+    "@types/node": "^22.10.0",
     "@vincenthsh/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
-    "cdktn-cli": "^0.23.3",
+    "cdktn-cli": "^0.24.0",
     "@cdktn/vitest": "^0.1.0",
     "deepmerge": "4.3.1",
     "typescript": "5.9.2",

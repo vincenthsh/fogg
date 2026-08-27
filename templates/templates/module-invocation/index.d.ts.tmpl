@@ -12,7 +12,7 @@ export interface {{ .ComponentNameTitle }}Outputs {
   /**
     * {{.Description}}
     */
-  {{$outer.ModulePrefix}}{{.Name}}: any;
+  {{ jsPropName (printf "%s%s" $outer.ModulePrefix .Name) }}: any;
   {{- end }}
 {{- end }}
 }

@@ -144,19 +144,19 @@ provider_versions:
         version: ~> 3.0
 integration_registry: null
 cdktf_dependencies:
-    '@cdktn/provider-aws': ^24.8.0
-    '@cdktn/provider-cloudflare': ^15.2.1
-    '@cdktn/provider-datadog': ^15.4.0
-    '@vincenthsh/cdktf-fogg-helpers': ^3.0.0
-    cdktn: ^0.23.3
-    constructs: ^10.6.0
+    '@cdktn/provider-aws': ^25.0.0
+    '@cdktn/provider-cloudflare': ^16.0.0
+    '@cdktn/provider-datadog': ^16.0.0
+    '@vincenthsh/cdktf-fogg-helpers': ^4.0.0
+    cdktn: ^0.24.0
+    constructs: ^10.7.2
 cdktf_dev_dependencies:
     '@swc/core': ^1.10.12
     '@types/eslint-config-prettier': ^6.11.3
-    '@types/node': ^20.17.16
+    '@types/node': ^22.10.0
     '@typescript-eslint/eslint-plugin': ^8.22.0
     '@typescript-eslint/parser': ^8.22.0
-    cdktn-cli: ^0.23.3
+    cdktn-cli: ^0.24.0
     eslint: ^9.19.0
     eslint-config-prettier: ^9.1.0
     eslint-config-turbo: ^2.3.4

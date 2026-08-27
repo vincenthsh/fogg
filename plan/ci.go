@@ -58,8 +58,12 @@ type TurboConfig struct {
 	Version                 string
 	RootName                string
 	SCMBase                 string
+	NodeVersion             string
+	PnpmVersion             string
 	DevDependencies         map[string]string
 	PnpmOverrides           map[string]string
+	PnpmAllowBuilds         []string
+	PnpmMinReleaseAgeExempt []string
 	CdktfPackages           []string
 	Workspaces              []vsCodeWorkspace
 	Scopes                  map[string]jsScope
@@ -400,6 +404,43 @@ func (p *Plan) buildGitHubActionsConfig(c *v2.Config, foggVersion string) GitHub
 
 const noCALoginRequired = "echo 'No CodeArtifact login required'"
 
+// mergeSorted unions defaults with repo-supplied additions, de-duplicated and
+// sorted so the generated pnpm-workspace.yaml is stable across runs.
+func mergeSorted(defaults, extra []string) []string {
+	seen := map[string]struct{}{}
+	for _, v := range append(append([]string{}, defaults...), extra...) {
+		if v != "" {
+			seen[v] = struct{}{}
+		}
+	}
+	if len(seen) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(seen))
+	for v := range seen {
+		out = append(out, v)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// nodeVersionFloor is the lowest Node release the generated cdktn toolchain
+// actually runs on: cdktn-cli 0.24 declares engines.node >=22.19.0 (plain
+// cdktn declares nothing, terraconstructs 0.2.17 wants >=22.12.0), so 22.19.0
+// is the binding constraint. engines.node is emitted as ">=" + this value; a
+// bare major like "22" would admit 22.0.0, which the toolchain rejects.
+//
+// templates/templates/turbo/root/.nvmrc.create must stay in sync with this
+// constant. That file is copied verbatim and only when absent (see the
+// ".create" branch in apply.applyTree), so it cannot be templated from here --
+// TestNvmrcMatchesNodeVersionFloor guards the pair instead.
+const nodeVersionFloor = "22.19.0"
+
+// pnpmVersion pins the packageManager field of generated repos. Must be >=10:
+// pnpm 10 stopped reading the "pnpm" key from package.json, which is where
+// overrides used to live, so fogg now emits them into pnpm-workspace.yaml.
+const pnpmVersion = "11.24.0"
+
 type vsCodeWorkspace struct {
 	Name string
 	Path string
@@ -407,9 +448,11 @@ type vsCodeWorkspace struct {
 
 func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 	turboConfig := &TurboConfig{
-		Enabled:  false,
-		SCMBase:  "main",
-		RootName: "fogg-monorepo",
+		Enabled:     false,
+		SCMBase:     "main",
+		RootName:    "fogg-monorepo",
+		NodeVersion: ">=" + nodeVersionFloor,
+		PnpmVersion: pnpmVersion,
 		DevDependencies: map[string]string{
 			"turbo": "^2.4.0", // https://github.com/vercel/turborepo/releases
 		},
@@ -420,21 +463,53 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		// tree. See https://cdktn.io/docs/release/upgrade-guide-v0-22 (Dual Dependencies).
 		// NOTE: emitted in the root package.json (pnpm.overrides) for pnpm 9.15.4; move
 		// to pnpm-workspace.yaml after the pnpm 10+ bump (vincenthsh/fogg#479).
+		//
+		// Both key forms are required, and they are not redundant:
+		//   - the @cdktf/* alias keys redirect third-party constructs that still declare
+		//     the deprecated cdktf packages as peers;
+		//   - the bare @cdktn/* keys pin packages that already declare the cdktn names
+		//     directly (terraconstructs peer-depends on @cdktn/provider-{archive,aws,
+		//     cloudinit,docker,time,tls}). Alias keys alone leave those unpinned, which
+		//     resolves a second copy of the same bindings under a different version and
+		//     breaks jsii type identity at synth time.
+		// Pin cdktn and constructs themselves for the same reason: a caret-only bridge
+		// lets two cdktn patch releases coexist in one tree.
 		PnpmOverrides: map[string]string{
-			"cdktf":                      "npm:cdktn@^0.23.3",
-			"@cdktf/provider-aws":        "npm:@cdktn/provider-aws@^24.8.0",
-			"@cdktf/provider-cloudflare": "npm:@cdktn/provider-cloudflare@^15.2.1",
-			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^15.4.0",
-			"@cdktf/provider-random":     "npm:@cdktn/provider-random@^14.1.0",
-			"@cdktf/provider-cloudinit":  "npm:@cdktn/provider-cloudinit@^13.1.0",
-			"@cdktf/provider-archive":    "npm:@cdktn/provider-archive@^13.1.0",
-			"@cdktf/provider-time":       "npm:@cdktn/provider-time@^13.1.0",
-			"@cdktf/provider-docker":     "npm:@cdktn/provider-docker@^15.3.0",
-			"@cdktf/provider-tls":        "npm:@cdktn/provider-tls@^13.1.0",
-			"@cdktf/provider-null":       "npm:@cdktn/provider-null@^13.1.0",
-			"@cdktf/provider-external":   "npm:@cdktn/provider-external@^13.1.0",
-			"@cdktf/provider-local":      "npm:@cdktn/provider-local@^13.1.0",
+			"cdktf":                      "npm:cdktn@^0.24.0",
+			"cdktn":                      "^0.24.0",
+			"constructs":                 "^10.7.2",
+			"@cdktf/provider-aws":        "npm:@cdktn/provider-aws@^25.0.0",
+			"@cdktf/provider-cloudflare": "npm:@cdktn/provider-cloudflare@^16.0.0",
+			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^16.0.0",
+			"@cdktf/provider-random":     "npm:@cdktn/provider-random@^15.0.0",
+			"@cdktf/provider-cloudinit":  "npm:@cdktn/provider-cloudinit@^14.0.0",
+			"@cdktf/provider-archive":    "npm:@cdktn/provider-archive@^14.0.0",
+			"@cdktf/provider-time":       "npm:@cdktn/provider-time@^14.0.0",
+			"@cdktf/provider-docker":     "npm:@cdktn/provider-docker@^16.0.0",
+			"@cdktf/provider-tls":        "npm:@cdktn/provider-tls@^14.0.0",
+			"@cdktf/provider-null":       "npm:@cdktn/provider-null@^15.0.0",
+			"@cdktf/provider-external":   "npm:@cdktn/provider-external@^14.0.0",
+			"@cdktf/provider-local":      "npm:@cdktn/provider-local@^14.0.0",
+			"@cdktn/provider-aws":        "^25.0.0",
+			"@cdktn/provider-cloudflare": "^16.0.0",
+			"@cdktn/provider-datadog":    "^16.0.0",
+			"@cdktn/provider-random":     "^15.0.0",
+			"@cdktn/provider-cloudinit":  "^14.0.0",
+			"@cdktn/provider-archive":    "^14.0.0",
+			"@cdktn/provider-time":       "^14.0.0",
+			"@cdktn/provider-docker":     "^16.0.0",
+			"@cdktn/provider-tls":        "^14.0.0",
+			"@cdktn/provider-null":       "^15.0.0",
+			"@cdktn/provider-external":   "^14.0.0",
+			"@cdktn/provider-local":      "^14.0.0",
 		},
+		// pnpm >=10 blocks dependency build scripts by default. @swc/core is the
+		// only devDependency fogg itself emits that ships an install script (it is
+		// in both the module and component CdktfDevDependencies sets, and builds a
+		// native binding in postinstall). Without this pnpm halts the install with
+		// ERR_PNPM_IGNORED_BUILDS and writes its own placeholder entry into the
+		// generated pnpm-workspace.yaml, which the next `fogg apply` would discard.
+		PnpmAllowBuilds:         []string{"@swc/core"},
 		CodeArtifactLoginScript: noCALoginRequired,
 	}
 
@@ -455,6 +530,10 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 			turboConfig.RootName = *c.Turbo.RootName
 		}
 
+		if c.Turbo.NodeVersion != nil {
+			turboConfig.NodeVersion = *c.Turbo.NodeVersion
+		}
+
 		if c.Turbo.Scopes != nil {
 			scopes, loginScript := parseJsScopes(&turboConfig.Scopes, c.Turbo.Scopes)
 			turboConfig.Scopes = *scopes
@@ -469,6 +548,10 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		for _, dep := range c.Turbo.PnpmOverrides {
 			turboConfig.PnpmOverrides[dep.Name] = dep.Version
 		}
+
+		turboConfig.PnpmAllowBuilds = mergeSorted(turboConfig.PnpmAllowBuilds, c.Turbo.PnpmAllowBuilds)
+		turboConfig.PnpmMinReleaseAgeExempt = mergeSorted(
+			turboConfig.PnpmMinReleaseAgeExempt, c.Turbo.PnpmMinimumReleaseAgeExclude)
 
 		pkgs := []string{}
 		workspaces := []vsCodeWorkspace{}

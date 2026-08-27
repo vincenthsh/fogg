@@ -1,2 +1,30 @@
 {{ template "fogg_header" }}
 packages:{{ .CdktfPackages | toYaml | nindent 2 }}
+{{- if .PnpmAllowBuilds }}
+
+# pnpm >=10 blocks dependency install/build scripts unless the package is listed
+# here. If a package that needs one is missing, pnpm halts the install with
+# ERR_PNPM_IGNORED_BUILDS and writes its own placeholder entry into this file --
+# which the next `fogg apply` would discard. Extend via turbo.pnpm_allow_builds.
+allowBuilds:
+{{- range .PnpmAllowBuilds }}
+  {{ . | quote }}: true
+{{- end }}
+{{- end }}
+{{- if .PnpmMinReleaseAgeExempt }}
+
+# Exemptions from the pnpm minimumReleaseAge supply-chain cooldown, for packages
+# published and adopted in the same coordinated bump. Each entry weakens that
+# protection, so remove it once the bump has landed.
+minimumReleaseAgeExclude:
+{{- range .PnpmMinReleaseAgeExempt }}
+  - {{ . | quote }}
+{{- end }}
+{{- end }}
+
+# pnpm >=10 no longer reads the "pnpm" key from package.json, so overrides live
+# here. Overrides rewrite dependency ranges by name across the whole tree, which
+# is what collapses the transitional cdktf/cdktn duplicates onto one copy. Note
+# they only take full effect on a fresh resolution: an existing lockfile can
+# retain a stale second copy behind a peer edge until it is re-resolved.
+overrides:{{ .PnpmOverrides | toYaml | nindent 2 }}

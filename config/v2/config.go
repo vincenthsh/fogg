@@ -580,6 +580,13 @@ type TurboConfig struct {
 	Version  *string `yaml:"version,omitempty"`   // Optional Turbo version, default: "^2.0.6"
 	RootName *string `yaml:"root_name,omitempty"` // Optional Name for the root package, default: "fogg-monorepo"
 	SCMBase  *string `yaml:"scm_base,omitempty"`  // Optional Git comparison base override, default: "main"
+	// Optional root package.json "engines.node" override, default: ">=22.19.0".
+	// cdktn-cli 0.24 declares engines.node >=22.19.0 (terraconstructs 0.2.17 wants
+	// >=22.12.0), so the default is the lowest release the generated toolchain
+	// actually runs on. A bare major like "22" would admit 22.0.0, which cdktn-cli
+	// rejects. Raise it to match the runtime that actually runs `synth` (e.g. an
+	// Atlantis AMI on node 24).
+	NodeVersion *string `yaml:"node_version,omitempty"`
 
 	Scopes          []JavascriptPackageScope `yaml:"scopes,omitempty"`           // Optional additional scopes, default: []
 	DevDependencies []JavascriptDependency   `yaml:"dev_dependencies,omitempty"` // Optional additional root dev dependencies, default: []
@@ -587,6 +594,18 @@ type TurboConfig struct {
 	// cdktf->cdktn dual-dependency defaults. Name is the package to override, Version
 	// is the replacement spec (e.g. "npm:@cdktn/provider-foo@^13.1.0"). default: []
 	PnpmOverrides []JavascriptDependency `yaml:"pnpm_overrides,omitempty"`
+	// Optional additional packages allowed to run install/build scripts, merged over
+	// the defaults. pnpm >=10 blocks dependency build scripts unless listed here;
+	// when a needed one is missing pnpm rewrites the generated pnpm-workspace.yaml
+	// with a "set this to true or false" placeholder, which the next `fogg apply`
+	// discards. default: ["@swc/core"]
+	PnpmAllowBuilds []string `yaml:"pnpm_allow_builds,omitempty"`
+	// Optional packages exempted from the pnpm minimumReleaseAge supply-chain
+	// cooldown. Use this only for packages you publish and adopt in a coordinated
+	// bump (e.g. a fogg release plus the repo bump within the same window), and
+	// remove the entry once the bump has landed so the protection is restored.
+	// default: []
+	PnpmMinimumReleaseAgeExclude []string `yaml:"pnpm_minimum_release_age_exclude,omitempty"`
 }
 
 type JavascriptDependency struct {

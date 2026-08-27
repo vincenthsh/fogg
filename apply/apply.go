@@ -79,6 +79,7 @@ func Apply(fs afero.Fs, conf *v2.Config, tmpl *templates.T, upgrade bool, envFil
 			if err != nil {
 				return errs.WrapUser(err, "unable to apply Turbo config")
 			}
+			warnNvmrcBelowNodeVersion(fs, plan.Turbo.NodeVersion)
 		}
 
 		err = applyModules(fs, plan.Modules, plan.Turbo, tmpl.Module, tmpl.Common, tmpl.TurboModule)

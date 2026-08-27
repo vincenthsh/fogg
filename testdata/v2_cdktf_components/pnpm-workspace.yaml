@@ -10,3 +10,44 @@ packages:
   - terraform/modules/foo
   - terraform/modules/my-cdktf-module
   - terraform/modules/my-cdktf-published-module
+
+# pnpm >=10 blocks dependency install/build scripts unless the package is listed
+# here. If a package that needs one is missing, pnpm halts the install with
+# ERR_PNPM_IGNORED_BUILDS and writes its own placeholder entry into this file --
+# which the next `fogg apply` would discard. Extend via turbo.pnpm_allow_builds.
+allowBuilds:
+  "@swc/core": true
+
+# pnpm >=10 no longer reads the "pnpm" key from package.json, so overrides live
+# here. Overrides rewrite dependency ranges by name across the whole tree, which
+# is what collapses the transitional cdktf/cdktn duplicates onto one copy. Note
+# they only take full effect on a fresh resolution: an existing lockfile can
+# retain a stale second copy behind a peer edge until it is re-resolved.
+overrides:
+  '@cdktf/provider-archive': npm:@cdktn/provider-archive@^14.0.0
+  '@cdktf/provider-aws': npm:@cdktn/provider-aws@^25.0.0
+  '@cdktf/provider-cloudflare': npm:@cdktn/provider-cloudflare@^16.0.0
+  '@cdktf/provider-cloudinit': npm:@cdktn/provider-cloudinit@^14.0.0
+  '@cdktf/provider-datadog': npm:@cdktn/provider-datadog@^16.0.0
+  '@cdktf/provider-docker': npm:@cdktn/provider-docker@^16.0.0
+  '@cdktf/provider-external': npm:@cdktn/provider-external@^14.0.0
+  '@cdktf/provider-local': npm:@cdktn/provider-local@^14.0.0
+  '@cdktf/provider-null': npm:@cdktn/provider-null@^15.0.0
+  '@cdktf/provider-random': npm:@cdktn/provider-random@^15.0.0
+  '@cdktf/provider-time': npm:@cdktn/provider-time@^14.0.0
+  '@cdktf/provider-tls': npm:@cdktn/provider-tls@^14.0.0
+  '@cdktn/provider-archive': ^14.0.0
+  '@cdktn/provider-aws': ^25.0.0
+  '@cdktn/provider-cloudflare': ^16.0.0
+  '@cdktn/provider-cloudinit': ^14.0.0
+  '@cdktn/provider-datadog': ^16.0.0
+  '@cdktn/provider-docker': ^16.0.0
+  '@cdktn/provider-external': ^14.0.0
+  '@cdktn/provider-local': ^14.0.0
+  '@cdktn/provider-null': ^15.0.0
+  '@cdktn/provider-random': ^15.0.0
+  '@cdktn/provider-time': ^14.0.0
+  '@cdktn/provider-tls': ^14.0.0
+  cdktf: npm:cdktn@^0.24.0
+  cdktn: ^0.24.0
+  constructs: ^10.7.2
