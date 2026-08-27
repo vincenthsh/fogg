@@ -6,7 +6,9 @@ import (
 	"io"
 	"io/fs"
 	"reflect"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -175,6 +177,24 @@ func deRef[T any](v *T) T {
 	return *v
 }
 
+// jsIdentifierRe matches strings usable as a bare JavaScript/TypeScript property
+// name. Terraform output names (and fogg's module prefixes) routinely contain
+// hyphens, which are legal in HCL but not in a bare TS identifier.
+var jsIdentifierRe = regexp.MustCompile(`^[A-Za-z_$][A-Za-z0-9_$]*$`)
+
+// jsPropName renders name as a TypeScript property key, quoting it only when it
+// is not a valid bare identifier. Emitting an unquoted hyphenated name produces
+// a .d.ts that fails to parse (TS1005/TS1131), which breaks type-check for the
+// component and every workspace sibling that imports it.
+//
+// This is designed to be called from a template.
+func jsPropName(name string) string {
+	if jsIdentifierRe.MatchString(name) {
+		return name
+	}
+	return strconv.Quote(name)
+}
+
 // OpenTemplate will read `source` for a template, parse, configure and return a template.Template
 func OpenTemplate(label string, source io.Reader, templates fs.FS) (*template.Template, error) {
 	// TODO we should probably cache these rather than open and parse them for every apply
@@ -187,6 +207,7 @@ func OpenTemplate(label string, source io.Reader, templates fs.FS) (*template.Te
 	funcs["toHclBlock"] = toHCLBlock
 	funcs["toHclAssignment"] = toHCLAssignment
 	funcs["toHCLExpression"] = toHCLExpression
+	funcs["jsPropName"] = jsPropName
 
 	s, err := io.ReadAll(source)
 	if err != nil {

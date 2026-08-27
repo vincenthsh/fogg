@@ -43,3 +43,20 @@ func TestOpenTemplate(t *testing.T) {
 	}
 
 }
+
+// The index.d.ts property key must go through jsPropName. Terraform output names
+// and fogg module prefixes may contain hyphens, which are invalid in a bare TS
+// property key and produced a .d.ts that failed to parse. No golden fixture uses
+// a hyphenated module prefix, which is why that shipped unnoticed -- so guard the
+// template itself against a revert to raw interpolation.
+func TestIndexDTsQuotesPropertyNames(t *testing.T) {
+	r := require.New(t)
+
+	b, err := fs.ReadFile(Templates.ModuleInvocation, "index.d.ts.tmpl")
+	r.NoError(err)
+	tmpl := string(b)
+
+	r.Contains(tmpl, "jsPropName", "index.d.ts.tmpl must render property keys via jsPropName")
+	r.NotContains(tmpl, "{{$outer.ModulePrefix}}{{.Name}}: any;",
+		"raw interpolation emits unquoted hyphenated keys (TS1005/TS1131)")
+}
