@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v3.0.0...cdktf-fogg-helpers-v4.0.0) (2026-08-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* generated components require node >= 22.12.0 (cdktn 0.24) and cdktn-cli 0.24 requires >= 22.19.0. Root package.json "engines.node" defaults to "22" and .nvmrc to v22; both are overridable via turbo.node_version for repos whose synth runtime is newer.
+
+### Features
+
+* bump generated toolchain to cdktn 0.24 / AWS provider v6.60 ([#491](https://github.com/vincenthsh/fogg/issues/491)) ([8b19ec1](https://github.com/vincenthsh/fogg/commit/8b19ec19d0b4ce443af5a4333854f3dc32758642))
+
 ## [3.0.0](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v2.0.0...cdktf-fogg-helpers-v3.0.0) (2026-06-30)
 
 
