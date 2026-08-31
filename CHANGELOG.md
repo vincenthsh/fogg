@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.94.1](https://github.com/vincenthsh/fogg/compare/v0.94.0...v0.94.1) (2026-08-31)
+
+
+### Misc
+
+* bump github.com/sirupsen/logrus in the gomod group ([#496](https://github.com/vincenthsh/fogg/issues/496)) ([320a8fe](https://github.com/vincenthsh/fogg/commit/320a8fe5b549e27d8c534457504fe1cbe68e80e4))
+
 ## [0.94.0](https://github.com/vincenthsh/fogg/compare/v0.93.1...v0.94.0) (2026-08-27)
 
 
