@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.94.1](https://github.com/vincenthsh/fogg/compare/v0.94.0...v0.94.1) (2026-09-14)
+
+
+### Misc
+
+* bump github.com/hashicorp/go-getter in the terraform group ([#498](https://github.com/vincenthsh/fogg/issues/498)) ([2f6b5a6](https://github.com/vincenthsh/fogg/commit/2f6b5a63b2bcf0e774d6c8a3204df3b189df94f1))
+* bump github.com/sirupsen/logrus in the gomod group ([#496](https://github.com/vincenthsh/fogg/issues/496)) ([320a8fe](https://github.com/vincenthsh/fogg/commit/320a8fe5b549e27d8c534457504fe1cbe68e80e4))
+* bump pnpm/action-setup in the github-actions group ([#499](https://github.com/vincenthsh/fogg/issues/499)) ([589249c](https://github.com/vincenthsh/fogg/commit/589249c329f9aa356bdc9d744d249591d2865472))
+
 ## [0.94.0](https://github.com/vincenthsh/fogg/compare/v0.93.1...v0.94.0) (2026-08-27)
 
 
