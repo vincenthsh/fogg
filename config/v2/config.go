@@ -219,6 +219,12 @@ type Atlantis struct {
 	// autoplan remote-states (only if depends_on is provided)
 	// default: false
 	AutoplanRemoteStates *bool `yaml:"autoplan_remote_states,omitempty"`
+	// name of a workflow (declared under defaults.tools.atlantis.workflows)
+	// to bind this project to, instead of the implicit "default" workflow.
+	// Only meaningful when set at env or component level; component wins
+	// over env. Setting it under defaults has no effect since every
+	// project would just resolve back to itself.
+	CustomWorkflow *string `yaml:"custom_workflow,omitempty"`
 	// Raw atlantis RepoCfg struct
 	raw.RepoCfg `yaml:",inline"`
 }

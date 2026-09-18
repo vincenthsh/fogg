@@ -72,6 +72,7 @@ component_backends:
 autoplan_relative_globs: []
 autoplan_files:
     - terraform/foo-fooFoo.yaml
+atlantis_custom_workflow: null
 locals_block:
     foo_foo_foo: yamldecode(file("../../../foo-fooFoo.yaml"))
 component_backends_filtered: false
@@ -235,6 +236,7 @@ global:
     component_backends: {}
     autoplan_relative_globs: []
     autoplan_files: []
+    atlantis_custom_workflow: null
     locals_block: {}
     component_backends_filtered: false
     env: ""
