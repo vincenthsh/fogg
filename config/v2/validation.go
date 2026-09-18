@@ -12,6 +12,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	goVersion "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	"github.com/runatlantis/atlantis/server/core/config/raw"
 	"github.com/spf13/afero"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -62,6 +63,7 @@ func (c *Config) Validate(fs afero.Fs) ([]string, error) {
 	errs = multierror.Append(errs, c.ValidateGithubActionsCI())
 	errs = multierror.Append(errs, c.validateTFE())
 	errs = multierror.Append(errs, c.ValidateFileDependencies(fs))
+	errs = multierror.Append(errs, c.ValidateAtlantisCustomWorkflows())
 
 	// refactor to make it easier to manage these
 	w, e := c.ValidateToolsTfLint()
@@ -532,6 +534,25 @@ func (c *Config) ValidateFileDependencies(fs afero.Fs) error {
 			if _, err := fs.Stat(file); os.IsNotExist(err) {
 				errs = multierror.Append(errs, fmt.Errorf("component: %s - File does not exist: %s\n", component, file))
 			}
+		}
+	})
+
+	return errs.ErrorOrNil()
+}
+
+func (c *Config) ValidateAtlantisCustomWorkflows() error {
+	var errs *multierror.Error
+	workflows := map[string]raw.Workflow{}
+	if c.Defaults.Tools != nil && c.Defaults.Tools.Atlantis != nil {
+		workflows = c.Defaults.Tools.Atlantis.Workflows
+	}
+	c.WalkComponents(func(component string, comms ...Common) {
+		workflow := ResolveOptionalString(AtlantisCustomWorkflowGetter, comms...)
+		if workflow == nil {
+			return
+		}
+		if _, ok := workflows[*workflow]; !ok {
+			errs = multierror.Append(errs, fmt.Errorf("component: %s - atlantis custom_workflow %q is not declared under defaults.tools.atlantis.workflows\n", component, *workflow))
 		}
 	})
 

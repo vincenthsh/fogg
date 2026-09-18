@@ -1,0 +1,80 @@
+defaults:
+  backend:
+    bucket: buck
+    role: role
+    account_id: "12345"
+    region: us-west-2
+  extra_vars:
+    foo: bar1
+  owner: foo@example.com
+  project: proj
+  tools:
+    atlantis:
+      enabled: true
+      # if depends_on is defined, don't ignore `remote-state.tf`
+      autoplan_remote_states: true
+      version: 3
+      automerge: true
+      parallel_plan: true
+      parallel_apply: true
+      workflows:
+        cosign-verify:
+          plan:
+            steps:
+              - init
+              - plan
+          apply:
+            steps:
+              - run: pnpm verify-images
+              - apply
+  providers:
+    aws:
+      account_id: 00456
+      profile: profile
+      region: us-west-2
+      version: 0.12.0
+  terraform_version: 0.100.0
+envs:
+  test:
+    components:
+      vpc:
+        modules:
+          - name: "vpc"
+            source: "terraform-aws-modules/vpc/aws"
+            version: "4.0.1"
+            for_each: "local.map"
+            variables:
+              - name
+              - cidr
+              - azs
+              - private_subnets
+              - public_subnets
+              - tags
+              - banana
+          - source: "terraform/modules/my_module"
+            name: "my_module"
+            depends_on:
+              - "vpc"
+          - source: "foo_modules/bar"
+            depends_on:
+              - "vpc"
+              - "my_module"
+      recurse_test:
+        module_source: "foo_modules/parent_module"
+      db:
+        depends_on:
+          components:
+            - vpc
+          relative_globs:
+            - "./*.enc.yaml"
+          files:
+            - "terraform/foo-fooFoo.yaml"
+            - "terraform/bar.json"
+        modules:
+          - source: "terraform/modules/my_module"
+        tools:
+          atlantis:
+            custom_workflow: cosign-verify
+modules:
+  my_module: {}
+version: 2

@@ -27,6 +27,7 @@ component_backends:
             role_arn: arn:aws:iam::123456789012:role/role
 autoplan_relative_globs: []
 autoplan_files: []
+atlantis_custom_workflow: null
 locals_block: {}
 component_backends_filtered: true
 env: test
@@ -188,6 +189,7 @@ global:
     component_backends: {}
     autoplan_relative_globs: []
     autoplan_files: []
+    atlantis_custom_workflow: null
     locals_block: {}
     component_backends_filtered: false
     env: ""

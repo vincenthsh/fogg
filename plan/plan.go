@@ -44,23 +44,24 @@ type Common struct {
 type ComponentCommon struct {
 	Common `yaml:",inline"`
 
-	AccountBackends       map[string]Backend         `yaml:"account_backends"`
-	Accounts              map[string]*json.Number    `yaml:"all_accounts"`
-	Backend               Backend                    `yaml:"backend"`
-	ComponentBackends     map[string]Backend         `yaml:"component_backends"`
-	AutoplanRelativeGlobs []string                   `yaml:"autoplan_relative_globs"`
-	AutoplanFiles         []string                   `yaml:"autoplan_files"`
-	LocalsBlock           map[string]any             `yaml:"locals_block"`
-	HasDependsOn          bool                       `yaml:"component_backends_filtered"`
-	Env                   string                     ` yaml:"env"`
-	ExtraVars             map[string]string          `yaml:"extra_vars"`
-	Name                  string                     `yaml:"name"`
-	Owner                 string                     `yaml:"owner"`
-	Project               string                     `yaml:"project"`
-	ProviderConfiguration ProviderConfiguration      `yaml:"providers_configuration"`
-	RequiredProviders     map[string]GenericProvider `yaml:"required_providers"`
-	ProviderVersions      map[string]ProviderVersion `yaml:"provider_versions"`
-	IntegrationRegistry   *string                    `yaml:"integration_registry"`
+	AccountBackends        map[string]Backend         `yaml:"account_backends"`
+	Accounts               map[string]*json.Number    `yaml:"all_accounts"`
+	Backend                Backend                    `yaml:"backend"`
+	ComponentBackends      map[string]Backend         `yaml:"component_backends"`
+	AutoplanRelativeGlobs  []string                   `yaml:"autoplan_relative_globs"`
+	AutoplanFiles          []string                   `yaml:"autoplan_files"`
+	AtlantisCustomWorkflow *string                    `yaml:"atlantis_custom_workflow"`
+	LocalsBlock            map[string]any             `yaml:"locals_block"`
+	HasDependsOn           bool                       `yaml:"component_backends_filtered"`
+	Env                    string                     ` yaml:"env"`
+	ExtraVars              map[string]string          `yaml:"extra_vars"`
+	Name                   string                     `yaml:"name"`
+	Owner                  string                     `yaml:"owner"`
+	Project                string                     `yaml:"project"`
+	ProviderConfiguration  ProviderConfiguration      `yaml:"providers_configuration"`
+	RequiredProviders      map[string]GenericProvider `yaml:"required_providers"`
+	ProviderVersions       map[string]ProviderVersion `yaml:"provider_versions"`
+	IntegrationRegistry    *string                    `yaml:"integration_registry"`
 
 	CdktfDependencies    map[string]string `yaml:"cdktf_dependencies"`
 	CdktfDevDependencies map[string]string `yaml:"cdktf_dev_dependencies"`
@@ -805,6 +806,7 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 			c.ComponentBackends = filtered
 			c.AutoplanRelativeGlobs = v2.ResolveOptionalStringSlice(v2.DependsOnRelativeGlobsGetter, defaults.Common, envConf.Common, componentConf.Common)
 			c.AutoplanFiles = v2.ResolveOptionalStringSlice(v2.DependsOnFilesGetter, defaults.Common, envConf.Common, componentConf.Common)
+			c.AtlantisCustomWorkflow = v2.ResolveOptionalString(v2.AtlantisCustomWorkflowGetter, defaults.Common, envConf.Common, componentConf.Common)
 			c.LocalsBlock = make(map[string]any)
 			envPlan.Components[name] = c
 		}

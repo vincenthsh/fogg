@@ -37,3 +37,15 @@ func TestResolveTfLint(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveAtlantisCustomWorkflow(t *testing.T) {
+	r := require.New(t)
+	wf := func(name string) v2.Common {
+		return v2.Common{Tools: &v2.Tools{Atlantis: &v2.Atlantis{CustomWorkflow: &name}}}
+	}
+
+	r.Nil(v2.ResolveOptionalString(v2.AtlantisCustomWorkflowGetter, v2.Common{}, v2.Common{}, v2.Common{}))
+	r.Equal("defaults", *v2.ResolveOptionalString(v2.AtlantisCustomWorkflowGetter, wf("defaults"), v2.Common{}, v2.Common{}))
+	r.Equal("env", *v2.ResolveOptionalString(v2.AtlantisCustomWorkflowGetter, wf("defaults"), wf("env"), v2.Common{}))
+	r.Equal("component", *v2.ResolveOptionalString(v2.AtlantisCustomWorkflowGetter, wf("defaults"), wf("env"), wf("component")))
+}

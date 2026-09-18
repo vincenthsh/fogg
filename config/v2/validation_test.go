@@ -5,6 +5,7 @@ import (
 
 	"github.com/chanzuckerberg/fogg/util"
 	"github.com/jinzhu/copier"
+	"github.com/runatlantis/atlantis/server/core/config/raw"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -539,6 +540,83 @@ func TestValidateFileDependencies(t *testing.T) {
 		t.Run(tt.label, func(t *testing.T) {
 			if err := tt.config.ValidateFileDependencies(fs); (err != nil) != tt.wantErr {
 				t.Errorf("Config.ValidateFileDependencies(fs) error = %v, wantErr %v (err != nil) %v", err, tt.wantErr, (err != nil))
+			}
+		})
+	}
+}
+
+func TestValidateAtlantisCustomWorkflows(t *testing.T) {
+	withWorkflows := func(names ...string) *Tools {
+		workflows := map[string]raw.Workflow{}
+		for _, n := range names {
+			workflows[n] = raw.Workflow{}
+		}
+		return &Tools{Atlantis: &Atlantis{RepoCfg: raw.RepoCfg{Workflows: workflows}}}
+	}
+	withCustomWorkflow := func(name string) *Tools {
+		return &Tools{Atlantis: &Atlantis{CustomWorkflow: util.Ptr(name)}}
+	}
+
+	var cases = []struct {
+		label   string
+		config  *Config
+		wantErr bool
+	}{
+		{
+			label: "no custom workflow",
+			config: &Config{
+				Envs: map[string]Env{
+					"dev": {Components: map[string]Component{"web": {}}},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			label: "declared workflow set on env and component",
+			config: &Config{
+				Defaults: Defaults{Common: Common{Tools: withWorkflows("env-wf", "comp-wf")}},
+				Envs: map[string]Env{
+					"dev": {
+						Common: Common{Tools: withCustomWorkflow("env-wf")},
+						Components: map[string]Component{
+							"web": {Common: Common{Tools: withCustomWorkflow("comp-wf")}},
+							"api": {},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			label: "undeclared workflow",
+			config: &Config{
+				Defaults: Defaults{Common: Common{Tools: withWorkflows("comp-wf")}},
+				Envs: map[string]Env{
+					"dev": {Components: map[string]Component{
+						"web": {Common: Common{Tools: withCustomWorkflow("typo-wf")}},
+					}},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			label: "no workflows declared",
+			config: &Config{
+				Envs: map[string]Env{
+					"dev": {Components: map[string]Component{
+						"web": {Common: Common{Tools: withCustomWorkflow("comp-wf")}},
+					}},
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, test := range cases {
+		tt := test
+		t.Run(tt.label, func(t *testing.T) {
+			if err := tt.config.ValidateAtlantisCustomWorkflows(); (err != nil) != tt.wantErr {
+				t.Errorf("Config.ValidateAtlantisCustomWorkflows() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

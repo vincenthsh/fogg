@@ -1396,3 +1396,10 @@ func DependsOnFilesGetter(comm Common) []string {
 	}
 	return comm.DependsOn.Files
 }
+
+func AtlantisCustomWorkflowGetter(comm Common) *string {
+	if comm.Tools == nil || comm.Tools.Atlantis == nil {
+		return nil
+	}
+	return comm.Tools.Atlantis.CustomWorkflow
+}
