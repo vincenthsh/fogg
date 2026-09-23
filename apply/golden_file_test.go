@@ -1,6 +1,7 @@
 package apply_test
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -184,10 +185,28 @@ func TestIntegration(t *testing.T) {
 						logrus.Debugf("f2:\n%s\n\n---- ", f2)
 
 						r.Equal(f1, f2, path)
+
+						if !isFixtureFile(path) && !isInFixtureDir(path) {
+							requirePreCommitClean(r, path, f2)
+						}
 					}
 					return nil
 				}))
 			}
 		})
+	}
+}
+
+// requirePreCommitClean fails if pre-commit's end-of-file-fixer or
+// trailing-whitespace hooks would modify generated content, so that a plain
+// `fogg apply` leaves no whitespace churn behind in downstream repos.
+func requirePreCommitClean(r *require.Assertions, path string, content []byte) {
+	if len(content) == 0 {
+		return
+	}
+	r.Truef(bytes.HasSuffix(content, []byte("\n")), "%s: missing newline at end of file", path)
+	r.Falsef(bytes.HasSuffix(content, []byte("\n\n")), "%s: extra blank lines at end of file", path)
+	for i, line := range strings.Split(string(content), "\n") {
+		r.Equalf(strings.TrimRight(line, " \t"), line, "%s:%d: trailing whitespace", path, i+1)
 	}
 }

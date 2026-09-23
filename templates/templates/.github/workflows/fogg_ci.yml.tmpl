@@ -35,7 +35,7 @@ jobs:
           echo "$(pwd)/.fogg/bin" >> "${GITHUB_PATH}"
       {{- if not (eq (len $githubActionsCI.DefaultAWSIAMRoleName) 0) }}
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6.2.3
+        uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: {{ $githubActionsCI.DefaultAWSIAMRoleName }}
           aws-region: {{ $githubActionsCI.DefaultAWSRegion }}
@@ -48,14 +48,16 @@ jobs:
       {{- if not (eq (len $githubActionsCI.PreCommit.GitHubActionSteps) 0) }}
       {{- toYaml $githubActionsCI.PreCommit.GitHubActionSteps | nindent 6 }}
       {{- end }}
-      # run fogg apply and selected pre-commit autofixers (ignore any errors)
-      - run: fogg apply && make pre-commit
+      - run: fogg apply
         env:
           FOGG_GITHUBTOKEN: {{`${{ secrets.GITHUB_TOKEN }}`}}
       # run full pre-commit
       - run: {{ list "pre-commit run --show-diff-on-failure --color=always" ($githubActionsCI.PreCommit.ExtraArgs | join " ") | join " " }}
         env:
           GITHUB_TOKEN: {{`${{ secrets.GITHUB_TOKEN }}`}}
+      # Run git diff and fail if it returns a non-zero exit code
+      - name: Ensure no git diff
+        run: git diff --exit-code
       {{- else }}
       - run: fogg apply
         env:

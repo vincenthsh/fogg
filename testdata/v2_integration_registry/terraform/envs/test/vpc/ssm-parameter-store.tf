@@ -3314,4 +3314,3 @@ resource "aws_ssm_parameter" "map_integrate_selected_vpc_id_stg" {
   insecure_value = each.value
   tags           = var.tags
 }
-
