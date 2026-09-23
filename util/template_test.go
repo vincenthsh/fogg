@@ -15,6 +15,18 @@ func TestDict(t *testing.T) {
 	require.Equal(t, "bar", r["foo"])
 }
 
+func TestToPrettyJsonRaw(t *testing.T) {
+	r := require.New(t)
+
+	out, err := toPrettyJsonRaw(map[string]string{
+		"clean": "rm -rf .turbo && rm -rf node_modules",
+	})
+	r.NoError(err)
+	// sprig's toPrettyJson HTML-escapes &, which has no meaning in a
+	// package.json script - it must round-trip literally, not as &.
+	r.Contains(out, `rm -rf .turbo && rm -rf node_modules`)
+}
+
 func TestJsPropName(t *testing.T) {
 	r := require.New(t)
 

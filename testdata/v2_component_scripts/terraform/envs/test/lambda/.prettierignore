@@ -1,0 +1,5 @@
+# ignore fogg managed files
+.fogg-component.yaml
+package.json
+src/index.ts
+src/.gen/**/*

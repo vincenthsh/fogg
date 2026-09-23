@@ -66,6 +66,7 @@ type ComponentCommon struct {
 	CdktfDependencies    map[string]string `yaml:"cdktf_dependencies"`
 	CdktfDevDependencies map[string]string `yaml:"cdktf_dev_dependencies"`
 	PackageJsonFields    map[string]any    `yaml:"package_fields"`
+	Scripts              map[string]string `yaml:"scripts"`
 
 	TfLint TfLint `yaml:"tf_lint"`
 
@@ -163,6 +164,19 @@ type ProviderConfiguration struct {
 type ProviderVersion struct {
 	Source  string  `yaml:"source" json:"source"`
 	Version *string `yaml:"version" json:"version"`
+}
+
+// defaultComponentScripts are the package.json "scripts" fogg always writes
+// for a cdktf/terraconstruct component. A component's own Scripts config can
+// add new script names but never overrides one of these.
+var defaultComponentScripts = map[string]string{
+	"get":        "cdktn get",
+	"ca:login":   "pnpm -w run ca:login",
+	"lint":       "eslint",
+	"prettier":   "prettier --write .",
+	"synth":      "ts-node --swc -P ./tsconfig.json src/index.ts",
+	"type-check": "tsc --noEmit",
+	"clean":      "rm -rf .turbo && rm -rf node_modules && rm -rf dist && rm -rf coverage",
 }
 
 var utilityProviders = map[string]ProviderVersion{
@@ -764,6 +778,12 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 
 			for key, value := range componentConf.PackageJsonFields {
 				componentPlan.PackageJsonFields[key] = value
+			}
+
+			for name, command := range componentConf.Scripts {
+				if _, exists := componentPlan.Scripts[name]; !exists {
+					componentPlan.Scripts[name] = command
+				}
 			}
 
 			if !envConf.NoGlobal {
@@ -1435,6 +1455,7 @@ func resolveComponentCommon(commons ...v2.Common) ComponentCommon {
 		CircleCI:            circlePlan,
 		GitHubActionsCI:     githubActionsPlan,
 		PackageJsonFields:   make(map[string]any, 0),
+		Scripts:             copyStringMap(defaultComponentScripts),
 	}
 }
 
@@ -1461,6 +1482,14 @@ func resolveAccounts(accounts map[string]v2.Account) map[string]*json.Number {
 
 func copyMap(in map[string]ProviderVersion) map[string]ProviderVersion {
 	out := map[string]ProviderVersion{}
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyStringMap(in map[string]string) map[string]string {
+	out := map[string]string{}
 	for k, v := range in {
 		out[k] = v
 	}

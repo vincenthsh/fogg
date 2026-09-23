@@ -21,6 +21,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// toPrettyJsonRaw is like sprig's toPrettyJson, but leaves &, <, > unescaped -
+// sprig's version runs the result through json.MarshalIndent, which HTML-escapes
+// those by default even though this is never HTML (e.g. package.json scripts
+// containing "&&" would otherwise render as "&&").
+func toPrettyJsonRaw(v interface{}) (string, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(v); err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(buf.String(), "\n"), nil
+}
+
 func dict(in interface{}) map[string]interface{} {
 	v := reflect.ValueOf(in)
 	if v.Kind() == reflect.Map {
@@ -208,6 +223,7 @@ func OpenTemplate(label string, source io.Reader, templates fs.FS) (*template.Te
 	funcs["toHclAssignment"] = toHCLAssignment
 	funcs["toHCLExpression"] = toHCLExpression
 	funcs["jsPropName"] = jsPropName
+	funcs["toPrettyJsonRaw"] = toPrettyJsonRaw
 
 	s, err := io.ReadAll(source)
 	if err != nil {
