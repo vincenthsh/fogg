@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.94.2](https://github.com/vincenthsh/fogg/compare/v0.94.1...v0.94.2) (2026-09-23)
+
+
+### Features
+
+* **component:** allow extra package.json scripts on cdktf/terraconstruct ([#504](https://github.com/vincenthsh/fogg/issues/504)) ([a732888](https://github.com/vincenthsh/fogg/commit/a7328884eea97a6fb85c3b0afc3ef19066563592))
+
+
+### Misc
+
+* bump golang.org/x/text in the gomod group across 1 directory ([#500](https://github.com/vincenthsh/fogg/issues/500)) ([4fa1246](https://github.com/vincenthsh/fogg/commit/4fa12467b6c4870e63adb73737ff56707c40d5dd))
+
+
+### BugFixes
+
+* **templates:** generate pre-commit clean output, drop make pre-commit from fogg_ci ([#505](https://github.com/vincenthsh/fogg/issues/505)) ([4f85672](https://github.com/vincenthsh/fogg/commit/4f85672ef7b579fa37e751a0431ed42b3bc45f54))
+
 ## [0.94.1](https://github.com/vincenthsh/fogg/compare/v0.94.0...v0.94.1) (2026-09-18)
 
 
