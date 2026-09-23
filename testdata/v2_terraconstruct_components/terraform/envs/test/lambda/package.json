@@ -3,7 +3,7 @@
   "author": "foo@example.com",
   "version": "0.0.0",
   "private": true,
-  "scripts":   {
+  "scripts": {
     "ca:login": "pnpm -w run ca:login",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist && rm -rf coverage",
     "get": "cdktn get",
@@ -13,7 +13,7 @@
     "type-check": "tsc --noEmit",
     "verify-images": "ts-node --swc -P ./tsconfig.json src/verify-images.ts"
   },
-  "dependencies":   {
+  "dependencies": {
     "@cdktn/provider-aws": "^25.0.0",
     "@cdktn/provider-cloudflare": "^16.0.0",
     "@cdktn/provider-datadog": "^16.0.0",
@@ -23,7 +23,7 @@
     "constructs": "^10.7.2",
     "terraconstructs": "^0.2.5"
   },
-  "devDependencies":   {
+  "devDependencies": {
     "@swc/core": "^1.10.12",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/node": "^22.10.0",

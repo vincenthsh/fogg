@@ -784,6 +784,11 @@ func fmtHcl(fs afero.Fs, path string, collapse bool) error {
 		in = collapseLines(in)
 	}
 	out := hclwrite.Format(in)
+	// hclwrite keeps trailing blank lines left over by templates; end with a
+	// single newline so pre-commit's end-of-file-fixer has nothing to fix
+	if trimmed := bytes.TrimRight(out, "\n"); len(trimmed) > 0 {
+		out = append(trimmed, '\n')
+	}
 	return afero.WriteReader(fs, path, bytes.NewReader(out))
 }
 

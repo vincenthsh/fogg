@@ -648,22 +648,26 @@ func TestGetTargetPath(t *testing.T) {
 func TestFmtHcl(t *testing.T) {
 	r := require.New(t)
 
-	before := `foo { bar     = "bam"}`
-	after := `foo { bar = "bam" }`
 	fs, d, err := util.TestFs()
 	r.NoError(err)
 	defer os.RemoveAll(d)
 
-	in := strings.NewReader(before)
-	e := afero.WriteReader(fs, "foo.tf", in)
-	r.Nil(e)
-	e = fmtHcl(fs, "foo.tf", false)
-	r.Nil(e)
-	out, e := afero.ReadFile(fs, "foo.tf")
-	r.Nil(e)
-	r.NotNil(out)
-	s := string(out)
-	r.Equal(after, s)
+	// output always ends with exactly one newline (pre-commit end-of-file-fixer)
+	cases := map[string]string{
+		`foo { bar     = "bam"}`:         "foo { bar = \"bam\" }\n",
+		"foo { bar     = \"bam\"}\n\n\n": "foo { bar = \"bam\" }\n",
+		"":                               "",
+	}
+	for before, after := range cases {
+		in := strings.NewReader(before)
+		e := afero.WriteReader(fs, "foo.tf", in)
+		r.Nil(e)
+		e = fmtHcl(fs, "foo.tf", false)
+		r.Nil(e)
+		out, e := afero.ReadFile(fs, "foo.tf")
+		r.Nil(e)
+		r.Equal(after, string(out))
+	}
 }
 
 func TestCalculateLocalPath(t *testing.T) {

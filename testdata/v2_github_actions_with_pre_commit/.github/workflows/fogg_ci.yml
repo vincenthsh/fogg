@@ -31,7 +31,7 @@ jobs:
           make setup
           echo "$(pwd)/.fogg/bin" >> "${GITHUB_PATH}"
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6.2.3
+        uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: infraci
           aws-region: awsregion
@@ -48,11 +48,13 @@ jobs:
         with:
           key: tflint-${{ hashFiles('.tflint.hcl') }}
           path: ~/.tflint.d/plugins
-      # run fogg apply and selected pre-commit autofixers (ignore any errors)
-      - run: fogg apply && make pre-commit
+      - run: fogg apply
         env:
           FOGG_GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       # run full pre-commit
       - run: pre-commit run --show-diff-on-failure --color=always --all-files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Run git diff and fail if it returns a non-zero exit code
+      - name: Ensure no git diff
+        run: git diff --exit-code
