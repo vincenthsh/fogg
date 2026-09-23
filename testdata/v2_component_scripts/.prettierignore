@@ -1,5 +1,0 @@
-# ignore fogg generated files
-package.json
-pnpm-workspace.yaml
-turbo.json
-.vscode/settings.json

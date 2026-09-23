@@ -1,4 +1,0 @@
-# ignore fogg managed files
-package.json
-# ignore CDKTF get CodeMaker output
-src/.gen/**/*

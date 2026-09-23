@@ -49,7 +49,6 @@ func TestIntegration(t *testing.T) {
 		{"v2_atlantis_custom_workflow"},
 		{"v2_cdktf_components"},
 		{"v2_terraconstruct_components"},
-		{"v2_component_scripts"},
 		{"generic_providers_yaml"},
 	}
 

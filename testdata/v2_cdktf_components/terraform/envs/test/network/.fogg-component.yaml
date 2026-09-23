@@ -168,8 +168,7 @@ cdktf_dev_dependencies:
     ts-node: ^10.9.2
     typescript: ^5.9.2
     typescript-eslint: ^8.22.0
-package_fields: {}
-scripts:
+cdktf_scripts:
     ca:login: pnpm -w run ca:login
     clean: rm -rf .turbo && rm -rf node_modules && rm -rf dist && rm -rf coverage
     get: cdktn get
@@ -177,6 +176,7 @@ scripts:
     prettier: prettier --write .
     synth: ts-node --swc -P ./tsconfig.json src/index.ts
     type-check: tsc --noEmit
+package_fields: {}
 tf_lint:
     enabled: false
 travisci:
@@ -317,8 +317,7 @@ global:
     integration_registry: null
     cdktf_dependencies: {}
     cdktf_dev_dependencies: {}
-    package_fields: {}
-    scripts:
+    cdktf_scripts:
         ca:login: pnpm -w run ca:login
         clean: rm -rf .turbo && rm -rf node_modules && rm -rf dist && rm -rf coverage
         get: cdktn get
@@ -326,6 +325,7 @@ global:
         prettier: prettier --write .
         synth: ts-node --swc -P ./tsconfig.json src/index.ts
         type-check: tsc --noEmit
+    package_fields: {}
     tf_lint:
         enabled: false
     travisci:

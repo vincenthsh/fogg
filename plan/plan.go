@@ -65,8 +65,8 @@ type ComponentCommon struct {
 
 	CdktfDependencies    map[string]string `yaml:"cdktf_dependencies"`
 	CdktfDevDependencies map[string]string `yaml:"cdktf_dev_dependencies"`
+	CdktfScripts         map[string]string `yaml:"cdktf_scripts"`
 	PackageJsonFields    map[string]any    `yaml:"package_fields"`
-	Scripts              map[string]string `yaml:"scripts"`
 
 	TfLint TfLint `yaml:"tf_lint"`
 
@@ -166,10 +166,11 @@ type ProviderVersion struct {
 	Version *string `yaml:"version" json:"version"`
 }
 
-// defaultComponentScripts are the package.json "scripts" fogg always writes
-// for a cdktf/terraconstruct component. A component's own Scripts config can
-// add new script names but never overrides one of these.
-var defaultComponentScripts = map[string]string{
+// defaultCdktfScripts are the package.json "scripts" fogg always writes
+// for a cdktf/terraconstruct component. A component's own CdktfScripts config can
+// add new script names but never overrides one of these (fogg's Makefile and
+// turbo tasks depend on them).
+var defaultCdktfScripts = map[string]string{
 	"get":        "cdktn get",
 	"ca:login":   "pnpm -w run ca:login",
 	"lint":       "eslint",
@@ -780,10 +781,12 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				componentPlan.PackageJsonFields[key] = value
 			}
 
-			for name, command := range componentConf.Scripts {
-				if _, exists := componentPlan.Scripts[name]; !exists {
-					componentPlan.Scripts[name] = command
+			for name, command := range componentConf.CdktfScripts {
+				if _, exists := defaultCdktfScripts[name]; exists {
+					logrus.Warnf("%s is a built-in cdktf script and can not be overridden in %s/%s (ignored)", name, envName, componentName)
+					continue
 				}
+				componentPlan.CdktfScripts[name] = command
 			}
 
 			if !envConf.NoGlobal {
@@ -1455,7 +1458,7 @@ func resolveComponentCommon(commons ...v2.Common) ComponentCommon {
 		CircleCI:            circlePlan,
 		GitHubActionsCI:     githubActionsPlan,
 		PackageJsonFields:   make(map[string]any, 0),
-		Scripts:             copyStringMap(defaultComponentScripts),
+		CdktfScripts:        copyStringMap(defaultCdktfScripts),
 	}
 }
 
