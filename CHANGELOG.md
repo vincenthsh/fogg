@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.94.3](https://github.com/vincenthsh/fogg/compare/v0.94.2...v0.94.3) (2026-09-28)
+
+
+### Misc
+
+* bump github.com/hashicorp/hcl/v2 ([#503](https://github.com/vincenthsh/fogg/issues/503)) ([36e2354](https://github.com/vincenthsh/fogg/commit/36e2354dbca47682a4322d89389502a8776324f4))
+* bump github.com/runatlantis/atlantis in the atlantis group ([#506](https://github.com/vincenthsh/fogg/issues/506)) ([b929fdc](https://github.com/vincenthsh/fogg/commit/b929fdcb6f1c60057bcf6923fb62da620dbe7859))
+
 ## [0.94.2](https://github.com/vincenthsh/fogg/compare/v0.94.1...v0.94.2) (2026-09-23)
 
 
