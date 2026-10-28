@@ -587,9 +587,9 @@ type TurboConfig struct {
 	Version  *string `yaml:"version,omitempty"`   // Optional Turbo version, default: "^2.0.6"
 	RootName *string `yaml:"root_name,omitempty"` // Optional Name for the root package, default: "fogg-monorepo"
 	SCMBase  *string `yaml:"scm_base,omitempty"`  // Optional Git comparison base override, default: "main"
-	// Optional root package.json "engines.node" override, default: ">=22.19.0".
-	// cdktn-cli 0.24 declares engines.node >=22.19.0 (terraconstructs 0.2.17 wants
-	// >=22.12.0), so the default is the lowest release the generated toolchain
+	// Optional root package.json "engines.node" override, default: ">=22.23.4".
+	// cdktn-cli 0.25 declares engines.node >=22.23.4 (the @cdktn/provider-* 0.25
+	// majors want >=22.11.0), so the default is the lowest release the generated toolchain
 	// actually runs on. A bare major like "22" would admit 22.0.0, which cdktn-cli
 	// rejects. Raise it to match the runtime that actually runs `synth` (e.g. an
 	// Atlantis AMI on node 24).
