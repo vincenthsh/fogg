@@ -32,7 +32,7 @@ func TestNodeVersionDefaultUsesFloor(t *testing.T) {
 	p := &Plan{}
 	turbo := p.buildTurboRootConfig(&v2.Config{})
 
-	// A bare major (">=22" or "22") would admit 22.0.0, which cdktn-cli 0.24
+	// A bare major (">=22" or "22") would admit 22.0.0, which cdktn-cli 0.25
 	// rejects. The default must carry the full floor.
 	r.Equal(">="+nodeVersionFloor, turbo.NodeVersion)
 	r.Equal(pnpmVersion, turbo.PnpmVersion)
