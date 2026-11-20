@@ -22,7 +22,7 @@ overrides:
   '@cdktf/provider-aws': npm:@cdktn/provider-aws@^26.0.0
   '@cdktf/provider-cloudflare': npm:@cdktn/provider-cloudflare@^17.0.0
   '@cdktf/provider-cloudinit': npm:@cdktn/provider-cloudinit@^15.0.0
-  '@cdktf/provider-datadog': npm:@cdktn/provider-datadog@^16.0.0
+  '@cdktf/provider-datadog': npm:@cdktn/provider-datadog@^17.0.0
   '@cdktf/provider-docker': npm:@cdktn/provider-docker@^17.0.0
   '@cdktf/provider-external': npm:@cdktn/provider-external@^15.0.0
   '@cdktf/provider-kubernetes': npm:@cdktn/provider-kubernetes@^15.1.0
@@ -35,7 +35,7 @@ overrides:
   '@cdktn/provider-aws': ^26.0.0
   '@cdktn/provider-cloudflare': ^17.0.0
   '@cdktn/provider-cloudinit': ^15.0.0
-  '@cdktn/provider-datadog': ^16.0.0
+  '@cdktn/provider-datadog': ^17.0.0
   '@cdktn/provider-docker': ^17.0.0
   '@cdktn/provider-external': ^15.0.0
   '@cdktn/provider-local': ^15.0.0
@@ -43,6 +43,6 @@ overrides:
   '@cdktn/provider-random': ^16.0.0
   '@cdktn/provider-time': ^15.0.0
   '@cdktn/provider-tls': ^15.0.0
-  cdktf: npm:cdktn@^0.25.0
-  cdktn: ^0.25.0
+  cdktf: npm:cdktn@^0.25.1
+  cdktn: ^0.25.1
   constructs: ^10.7.2

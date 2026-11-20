@@ -612,15 +612,15 @@ func (p *Plan) buildModules(c *v2.Config) map[string]Module {
 		modulePlan.CdktfDependencies = map[string]string{}
 		modulePlan.CdktfPeerDependencies = map[string]string{
 			// cdktf is deprecated; cdktn is the community fork (CDK Terrain)
-			"cdktn":      "^0.25.0",
+			"cdktn":      "^0.25.1",
 			"constructs": "^10.7.2",
 		}
 		modulePlan.CdktfDevDependencies = map[string]string{
 			"@swc/core":           "^1.10.12",
 			"@types/node":         "^22.10.0", // cdktn 0.25 toolchain requires node >=22.23.4
 			"constructs":          "^10.7.2",
-			"cdktn":               "^0.25.0",
-			"cdktn-cli":           "^0.25.0", // required to run cdktn get; engines: node >=22.23.4
+			"cdktn":               "^0.25.1",
+			"cdktn-cli":           "^0.25.1", // required to run cdktn get; engines: node >=22.23.4
 			"@cdktn/vitest":       "^0.1.0",  // org-owned vitest adapter (cdktn-io/cdktn-vitest); peer: vitest >= 2.1
 			"ts-node":             "^10.9.2",
 			"typescript":          "^5.9.2",
@@ -742,14 +742,14 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				"@vincenthsh/cdktf-fogg-helpers": "^5.0.0",
 				"@cdktn/provider-aws":            "^26.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency (AWS provider v6.70)
 				"@cdktn/provider-cloudflare":     "^17.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency
-				"@cdktn/provider-datadog":        "^16.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency; TODO: bump once a cdktn-0.25 major is published
-				"cdktn":                          "^0.25.0",
+				"@cdktn/provider-datadog":        "^17.0.0", // @vincenthsh/cdktf-fogg-helpers peer dependency
+				"cdktn":                          "^0.25.1",
 				"constructs":                     "^10.7.2",
 			}
 			componentPlan.CdktfDevDependencies = map[string]string{
 				"@swc/core":   "^1.10.12",
 				"@types/node": "^22.10.0", // cdktn 0.25 toolchain requires node >=22.23.4
-				"cdktn-cli":   "^0.25.0",  // required to run `cdktn get`; engines: node >=22.23.4
+				"cdktn-cli":   "^0.25.1",  // required to run `cdktn get`; engines: node >=22.23.4
 				"ts-node":     "^10.9.2",
 				"typescript":  "^5.9.2",
 				// eslint/prettier v9
@@ -766,7 +766,7 @@ func (p *Plan) buildEnvs(conf *v2.Config) (map[string]Env, error) {
 				"prettier":                         "^3.4.2",
 			}
 			if componentConf.Kind.GetOrDefault() == v2.ComponentKindTerraConstruct {
-				componentPlan.CdktfDependencies["terraconstructs"] = "^0.2.5"
+				componentPlan.CdktfDependencies["terraconstructs"] = "^0.2.21"
 			}
 
 			for _, dep := range componentConf.CdktfDependencies {

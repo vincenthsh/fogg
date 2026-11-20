@@ -475,16 +475,13 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 		// Pin cdktn and constructs themselves for the same reason: a caret-only bridge
 		// lets two cdktn patch releases coexist in one tree.
 		//
-		// TODO: provider-datadog stays on ^16 (peer cdktn ^0.24) until
-		// cdktn-io/cdktn-provider-datadog publishes its cdktn-0.25 major; bump both
-		// datadog keys then.
 		PnpmOverrides: map[string]string{
-			"cdktf":                      "npm:cdktn@^0.25.0",
-			"cdktn":                      "^0.25.0",
+			"cdktf":                      "npm:cdktn@^0.25.1",
+			"cdktn":                      "^0.25.1",
 			"constructs":                 "^10.7.2",
 			"@cdktf/provider-aws":        "npm:@cdktn/provider-aws@^26.0.0",
 			"@cdktf/provider-cloudflare": "npm:@cdktn/provider-cloudflare@^17.0.0",
-			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^16.0.0",
+			"@cdktf/provider-datadog":    "npm:@cdktn/provider-datadog@^17.0.0",
 			"@cdktf/provider-random":     "npm:@cdktn/provider-random@^16.0.0",
 			"@cdktf/provider-cloudinit":  "npm:@cdktn/provider-cloudinit@^15.0.0",
 			"@cdktf/provider-archive":    "npm:@cdktn/provider-archive@^15.0.0",
@@ -496,7 +493,7 @@ func (p *Plan) buildTurboRootConfig(c *v2.Config) *TurboConfig {
 			"@cdktf/provider-local":      "npm:@cdktn/provider-local@^15.0.0",
 			"@cdktn/provider-aws":        "^26.0.0",
 			"@cdktn/provider-cloudflare": "^17.0.0",
-			"@cdktn/provider-datadog":    "^16.0.0",
+			"@cdktn/provider-datadog":    "^17.0.0",
 			"@cdktn/provider-random":     "^16.0.0",
 			"@cdktn/provider-cloudinit":  "^15.0.0",
 			"@cdktn/provider-archive":    "^15.0.0",

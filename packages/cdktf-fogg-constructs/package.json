@@ -39,17 +39,17 @@
   "peerDependencies": {
     "@cdktn/provider-aws": "^26.0.0",
     "@cdktn/provider-cloudflare": "^17.0.0",
-    "@cdktn/provider-datadog": "^16.0.0",
-    "cdktn": "^0.25.0",
+    "@cdktn/provider-datadog": "^17.0.0",
+    "cdktn": "^0.25.1",
     "constructs": "^10.7.2",
-    "terraconstructs": "^0.2.17"
+    "terraconstructs": "^0.2.21"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.0",
     "@vincenthsh/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
-    "cdktn-cli": "^0.25.0",
+    "cdktn-cli": "^0.25.1",
     "@cdktn/vitest": "^0.1.0",
     "deepmerge": "4.3.1",
     "typescript": "5.9.2",
