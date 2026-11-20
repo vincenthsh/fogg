@@ -12,6 +12,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # npm trusted publishing (OIDC): pnpm exchanges this job's GitHub OIDC
+      # token for a short-lived npm publish token. Requires a trusted publisher
+      # configured on npmjs.com for @vincenthsh/cdktf-fogg-helpers
+      # (repo vincenthsh/fogg, workflow release.yml).
+      id-token: write
     steps:
       - name: release please
         uses: google-github-actions/release-please-action@v4.1.1
@@ -70,6 +75,7 @@ jobs:
       - name: Run pnpm Publish
         run: pnpm ci:publish
         env:
+          # Fallback only: used when OIDC trusted publishing is unavailable.
           # setup-node action sets up .npmrc for NODE_AUTH_TOKEN
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ steps.release.outputs.release_created }}
