@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v4.0.0...cdktf-fogg-helpers-v5.0.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* generated repos require node >= 22.23.4 (cdktn-cli 0.25). engines.node defaults to ">=22.23.4" and .nvmrc.create to v22.23.4. .nvmrc is write-if-absent, so existing repos must bump it by hand (fogg warns when it is below the floor).
+
+### Features
+
+* bump generated toolchain to cdktn 0.25 / AWS provider v6.70 ([#512](https://github.com/vincenthsh/fogg/issues/512)) ([a278ed7](https://github.com/vincenthsh/fogg/commit/a278ed7302bca7d033acf414c7ebe5726696c6f4))
+
 ## [4.0.0](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v3.0.0...cdktf-fogg-helpers-v4.0.0) (2026-08-27)
 
 

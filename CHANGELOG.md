@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.95.0](https://github.com/vincenthsh/fogg/compare/v0.94.2...v0.95.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* generated repos require node >= 22.23.4 (cdktn-cli 0.25). engines.node defaults to ">=22.23.4" and .nvmrc.create to v22.23.4. .nvmrc is write-if-absent, so existing repos must bump it by hand (fogg warns when it is below the floor).
+
+### Features
+
+* bump generated toolchain to cdktn 0.25 / AWS provider v6.70 ([#512](https://github.com/vincenthsh/fogg/issues/512)) ([a278ed7](https://github.com/vincenthsh/fogg/commit/a278ed7302bca7d033acf414c7ebe5726696c6f4))
+
+
+### Misc
+
+* bump github.com/hashicorp/go-getter ([#509](https://github.com/vincenthsh/fogg/issues/509)) ([8ba9a83](https://github.com/vincenthsh/fogg/commit/8ba9a83020d5f653190b141ed0d5d67866d9b93a))
+* bump github.com/hashicorp/hcl/v2 ([#503](https://github.com/vincenthsh/fogg/issues/503)) ([36e2354](https://github.com/vincenthsh/fogg/commit/36e2354dbca47682a4322d89389502a8776324f4))
+* bump github.com/runatlantis/atlantis ([#508](https://github.com/vincenthsh/fogg/issues/508)) ([2f2ebbe](https://github.com/vincenthsh/fogg/commit/2f2ebbe274484ee1495e08278353a1579e5f14f2))
+* bump github.com/runatlantis/atlantis ([#511](https://github.com/vincenthsh/fogg/issues/511)) ([206792b](https://github.com/vincenthsh/fogg/commit/206792b33c1e1d6c830ef7fc584778e1b615e13c))
+* bump github.com/runatlantis/atlantis ([#513](https://github.com/vincenthsh/fogg/issues/513)) ([ed87d8a](https://github.com/vincenthsh/fogg/commit/ed87d8a6cfe4f8e92b99b18b00b3fe731519cd4a))
+* bump github.com/runatlantis/atlantis in the atlantis group ([#506](https://github.com/vincenthsh/fogg/issues/506)) ([b929fdc](https://github.com/vincenthsh/fogg/commit/b929fdcb6f1c60057bcf6923fb62da620dbe7859))
+* bump pnpm/action-setup ([#514](https://github.com/vincenthsh/fogg/issues/514)) ([fa1835a](https://github.com/vincenthsh/fogg/commit/fa1835afe891efb422c79dde7a68b9d92fb0aa1d))
+* bump the gomod group across 1 directory with 2 updates ([#510](https://github.com/vincenthsh/fogg/issues/510)) ([9cc6748](https://github.com/vincenthsh/fogg/commit/9cc674823fce21ab09eaae754772895ed72a9b74))
+* bump the gomod group across 1 directory with 4 updates ([#516](https://github.com/vincenthsh/fogg/issues/516)) ([78942ec](https://github.com/vincenthsh/fogg/commit/78942ec14bd90cf47356a1312e6517fbb238873f))
+
 ## [0.94.2](https://github.com/vincenthsh/fogg/compare/v0.94.1...v0.94.2) (2026-09-23)
 
 
