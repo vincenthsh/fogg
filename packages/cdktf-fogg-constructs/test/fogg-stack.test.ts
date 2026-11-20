@@ -235,15 +235,42 @@ describe('FoggStack', () => {
           },
           internal_zone_id: {
             value:
-              '${lookup(data.terraform_remote_state.network.outputs.internal_dns_zone, "id", "")}',
+              '${data.terraform_remote_state.network.outputs.internal_dns_zone.id}',
           },
           endpoint_apigw: {
             value:
-              '${lookup(data.terraform_remote_state.network.outputs.endpoints, "apigw", "")}',
+              '${data.terraform_remote_state.network.outputs.endpoints.apigw}',
           },
           endpoint_apigw_domain: {
             value:
               '${data.terraform_remote_state.network.outputs.endpoints.apigw.domain}',
+          },
+        },
+      })
+    })
+    it('lookup only renders a lookup() call when a default is passed', () => {
+      const outputs = stack.remoteState<NetworkOutputs>(
+        'network',
+        networkOutputsSchema,
+      )
+      // no default: dotted path, so a missing key fails the plan
+      addOutput('endpoint_strict', outputs.endpoints.lookup('apigw'))
+      // explicit default (including ''): opt in to tolerating a missing key
+      addOutput('endpoint_empty', outputs.endpoints.lookup('apigw', ''))
+      addOutput('endpoint_na', outputs.endpoints.lookup('apigw', 'n/a'))
+      Template.fromStack(stack, { snapshot: false }).toMatchObject({
+        output: {
+          endpoint_strict: {
+            value:
+              '${data.terraform_remote_state.network.outputs.endpoints.apigw}',
+          },
+          endpoint_empty: {
+            value:
+              '${lookup(data.terraform_remote_state.network.outputs.endpoints, "apigw", "")}',
+          },
+          endpoint_na: {
+            value:
+              '${lookup(data.terraform_remote_state.network.outputs.endpoints, "apigw", "n/a")}',
           },
         },
       })
