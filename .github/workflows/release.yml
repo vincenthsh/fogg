@@ -2,6 +2,10 @@ on:
   push:
     branches:
       - feat-multi-module-components
+  # Manual npm publish through this workflow file, which is the one the npm
+  # trusted publisher is bound to. Use it to publish a release whose
+  # release-please run already happened (release_created is only true once).
+  workflow_dispatch:
 
 name: release-please
 env:
@@ -12,10 +16,16 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # npm trusted publishing (OIDC): pnpm exchanges this job's GitHub OIDC
+      # token for a short-lived npm publish token. Requires a trusted publisher
+      # configured on npmjs.com for @vincenthsh/cdktf-fogg-helpers
+      # (repo vincenthsh/fogg, workflow release.yml).
+      id-token: write
     steps:
       - name: release please
         uses: google-github-actions/release-please-action@v4.1.1
         id: release
+        if: ${{ github.event_name == 'push' }}
         with:
           # https://github.com/google-github-actions/release-please-action#github-credentials
           token: ${{ secrets.VINCENT_PAT }}
@@ -27,7 +37,7 @@ jobs:
         # so we build the proper version
         with:
           fetch-depth: 0
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
 
       - uses: actions/setup-go@v7
         with:
@@ -54,22 +64,22 @@ jobs:
         uses: pnpm/action-setup@v6.1.1
         with:
           run_install: false
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: "pnpm"
           registry-url: 'https://registry.npmjs.org'
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
       - name: Run pnpm Build
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
       - name: Run pnpm Publish
+        # Authenticates with npm trusted publishing (OIDC, id-token: write above).
+        # No NPM_TOKEN: the npm trusted publisher for this package is bound to
+        # vincenthsh/fogg + release.yml. pnpm skips versions already on npm.
         run: pnpm ci:publish
-        env:
-          # setup-node action sets up .npmrc for NODE_AUTH_TOKEN
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
