@@ -95,7 +95,7 @@ export class RemoteStateAccessProxy<T extends Record<string, any>> {
           case 'map': {
             const mapWrapper: MapOutput<T> = {
               lookup: (key: string, defaultValue?: string) =>
-                Fn.lookup(this.data.get(prop), key, defaultValue ?? ''),
+                Fn.lookup(this.data.get(prop), key, defaultValue),
               lookupNested: (...path: string[]) =>
                 Fn.lookupNested(this.data.get(prop), path),
               token: this.data.getString(prop),
