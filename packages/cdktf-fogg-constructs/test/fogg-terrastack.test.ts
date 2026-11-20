@@ -255,7 +255,7 @@ describe('FoggTerraStack', () => {
           },
           endpoint_apigw: {
             value:
-              '${data.terraform_remote_state.network.outputs.endpoints.apigw}',
+              '${lookup(data.terraform_remote_state.network.outputs.endpoints, "apigw", "")}',
           },
           endpoint_apigw_domain: {
             value:

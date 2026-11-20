@@ -235,11 +235,11 @@ describe('FoggStack', () => {
           },
           internal_zone_id: {
             value:
-              '${data.terraform_remote_state.network.outputs.internal_dns_zone.id}',
+              '${lookup(data.terraform_remote_state.network.outputs.internal_dns_zone, "id", "")}',
           },
           endpoint_apigw: {
             value:
-              '${data.terraform_remote_state.network.outputs.endpoints.apigw}',
+              '${lookup(data.terraform_remote_state.network.outputs.endpoints, "apigw", "")}',
           },
           endpoint_apigw_domain: {
             value:

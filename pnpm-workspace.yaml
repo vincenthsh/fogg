@@ -14,3 +14,12 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - "@cdktn/vitest"
   - "terraconstructs"
+  # cdktn core + CLI (cdktn-io): adopt upstream fixes without waiting out the cooldown.
+  - "cdktn"
+  - "cdktn-cli"
+  - "@cdktn/commons"
+  - "@cdktn/hcl-tools"
+  - "@cdktn/hcl2cdk"
+  - "@cdktn/hcl2json"
+  - "@cdktn/provider-generator"
+  - "@cdktn/provider-schema"

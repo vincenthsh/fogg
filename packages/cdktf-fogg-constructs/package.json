@@ -30,27 +30,34 @@
   },
   "homepage": "https://github.com/vincenthsh/fogg#readme",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.23.4"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
     "ts-morph": "^25.0.1"
   },
   "peerDependencies": {
-    "@cdktn/provider-aws": "^25.0.0",
-    "@cdktn/provider-cloudflare": "^16.0.0",
-    "@cdktn/provider-datadog": "^16.0.0",
-    "cdktn": "^0.24.0",
+    "@cdktn/provider-aws": "^26.0.0",
+    "@cdktn/provider-cloudflare": "^17.0.0",
+    "@cdktn/provider-datadog": "^17.0.0",
+    "cdktn": "^0.25.1",
     "constructs": "^10.7.2",
-    "terraconstructs": "^0.2.17"
+    "terraconstructs": "^0.2.21"
   },
   "devDependencies": {
+    "@aws-cdk/cloud-assembly-schema": "^54.17.0",
+    "@aws-cdk/region-info": "^2.233.0",
+    "@cdktn/provider-archive": "^15.0.0",
+    "@cdktn/provider-cloudinit": "^15.0.0",
+    "@cdktn/provider-docker": "^17.0.0",
+    "@cdktn/provider-time": "^15.0.0",
+    "@cdktn/provider-tls": "^15.0.0",
+    "@cdktn/vitest": "^0.1.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.0",
     "@vincenthsh/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
-    "cdktn-cli": "^0.24.0",
-    "@cdktn/vitest": "^0.1.0",
+    "cdktn-cli": "^0.25.1",
     "deepmerge": "4.3.1",
     "typescript": "5.9.2",
     "unplugin-swc": "^1.5.1",
