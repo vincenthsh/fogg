@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.1](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v5.0.0...cdktf-fogg-helpers-v5.0.1) (2026-11-20)
+
+
+### BugFixes
+
+* **helpers:** pass remote-state lookup() default through unchanged ([#519](https://github.com/vincenthsh/fogg/issues/519)) ([6db28d8](https://github.com/vincenthsh/fogg/commit/6db28d8b8d5dd69de0cc24f7d52bacd3c6a84f68))
+
 ## [5.0.0](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v4.0.0...cdktf-fogg-helpers-v5.0.0) (2026-11-20)
 
 

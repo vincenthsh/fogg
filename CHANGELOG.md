@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.95.2](https://github.com/vincenthsh/fogg/compare/v0.95.1...v0.95.2) (2026-11-20)
+
+
+### BugFixes
+
+* **helpers:** pass remote-state lookup() default through unchanged ([#519](https://github.com/vincenthsh/fogg/issues/519)) ([6db28d8](https://github.com/vincenthsh/fogg/commit/6db28d8b8d5dd69de0cc24f7d52bacd3c6a84f68))
+
 ## [0.95.1](https://github.com/vincenthsh/fogg/compare/v0.95.0...v0.95.1) (2026-11-20)
 
 
