@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.95.1](https://github.com/vincenthsh/fogg/compare/v0.95.0...v0.95.1) (2026-11-20)
+
+
+### Continuous Integration
+
+* publish helpers via npm trusted publishing (OIDC) ([#517](https://github.com/vincenthsh/fogg/issues/517)) ([c16583c](https://github.com/vincenthsh/fogg/commit/c16583c3e1d6a389b6dcb371386fdd2c556ca49b))
+
 ## [0.95.0](https://github.com/vincenthsh/fogg/compare/v0.94.2...v0.95.0) (2026-11-20)
 
 
