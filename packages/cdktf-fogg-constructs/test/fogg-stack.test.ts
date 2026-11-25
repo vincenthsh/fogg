@@ -1,38 +1,23 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import 'cdktn/lib/testing/adapters/jest'
 import { App, TerraformOutput, Testing } from 'cdktn'
 import merge from 'deepmerge'
-import { FoggStack } from '../src/fogg-stack'
-import type { Component } from '../src/imports/fogg-types.generated'
-import type {
-  InferOutputSchema,
-  ListOutput,
-  MapOutput,
-} from '../src/util/remote-state-access-proxy'
+import type { Component, FoggStack as FoggStackType } from '../src'
+import type { InferOutputSchema, ListOutput, MapOutput } from '../src'
 import { Template } from './assertions'
+import { IMPLS, givenComponent, setupParity } from './helpers/parity'
 
-// hoisted mock, can't capture variable for vi.fn() mock
-vi.mock(import('../src/util/load-component-config'), async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    loadComponentConfig: vi.fn(),
-  }
-})
-// get Mock handle through module re-import with mock in effect
-import { loadComponentConfig as mockedLoadCompCfg } from '../src/util/load-component-config'
-const loadComponentConfig = mockedLoadCompCfg as ReturnType<typeof vi.fn>
+setupParity()
 
 let app: App
-describe('FoggStack', () => {
+describe.each(IMPLS)('FoggStack [$name]', ({ FoggStack }) => {
   beforeEach(() => {
     app = Testing.app()
-    loadComponentConfig.mockReset()
   })
 
   it('translates fogg backend config to tf backend config', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         backend: {
           kind: 's3',
@@ -62,7 +47,7 @@ describe('FoggStack', () => {
 
   it('throws error on unsupported backend', () => {
     // WHEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         backend: { kind: 'unknown' },
       }),
@@ -75,7 +60,7 @@ describe('FoggStack', () => {
 
   it('skips creating remote states if forceRemoteStates is false', () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         component_backends: {
           network: {
@@ -98,7 +83,7 @@ describe('FoggStack', () => {
   })
 
   describe('creates remote states if forceRemoteStates is true', () => {
-    let stack: FoggStack
+    let stack: FoggStackType
     /**
      * helper to add a TerraformOutput to the stack
      */
@@ -109,7 +94,7 @@ describe('FoggStack', () => {
       })
     }
     beforeEach(() => {
-      loadComponentConfig.mockReturnValue(
+      givenComponent(
         merge(getDefaultComponentConfig(), {
           component_backends: {
             network: {
@@ -279,7 +264,7 @@ describe('FoggStack', () => {
 
   it('exposes file dependencies through locals', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         locals_block: {
           foo_foo_foo: 'yamldecode(file("../../../foo-fooFoo.yaml"))',
@@ -301,7 +286,7 @@ describe('FoggStack', () => {
 
   it('allows configuring modules', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         modules: [
           {
@@ -337,8 +322,8 @@ describe('FoggStack', () => {
   it('allows configuring main module', async () => {
     // GIVEN
     const module_source = 'terraform/modules/foo'
-    loadComponentConfig.mockReturnValue(
-      merge(getDefaultComponentConfig(), {
+    givenComponent(
+      merge<Component>(getDefaultComponentConfig(), {
         module_source,
       }),
     )
@@ -362,7 +347,7 @@ describe('FoggStack', () => {
 
   it('throws error setting variable without module_source', () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(getDefaultComponentConfig())
+    givenComponent(getDefaultComponentConfig())
     // THEN
     const stack = new FoggStack(app, 'MyStack')
     expect(() => stack.setMainModuleVariables({})).toThrow(
@@ -372,7 +357,7 @@ describe('FoggStack', () => {
 
   it('exposes default Aws provider', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -392,7 +377,7 @@ describe('FoggStack', () => {
 
   it('exposes aliased providers', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -441,7 +426,7 @@ describe('FoggStack', () => {
 
   it('sets foggComponent default tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -484,7 +469,7 @@ describe('FoggStack', () => {
 
   it('sets foggComponent ignore tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -519,7 +504,7 @@ describe('FoggStack', () => {
 
   it('sets foggComponent default and constructor default tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -569,7 +554,7 @@ describe('FoggStack', () => {
 
   it('sets foggComponent ignore and constructor ignore tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -608,7 +593,7 @@ describe('FoggStack', () => {
 
   it('sets constructor ignore tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -643,7 +628,7 @@ describe('FoggStack', () => {
 
   it('exposes fogg component configuration values', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(getDefaultComponentConfig())
+    givenComponent(getDefaultComponentConfig())
     // WHEN
     const stack = new FoggStack(app, 'MyStack')
     // THEN
@@ -654,7 +639,7 @@ describe('FoggStack', () => {
 
   it('parses bundled and generic provider configurations', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           datadog: {
@@ -711,7 +696,7 @@ describe('FoggStack', () => {
 
   it('throws for unsupported generic providers', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         required_providers: {
           bar: {

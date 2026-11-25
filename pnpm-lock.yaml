@@ -32,6 +32,9 @@ importers:
       '@cdktn/provider-datadog':
         specifier: ^17.0.0
         version: 17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      '@tcons/component':
+        specifier: ^0.2.0
+        version: 0.2.0(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudflare@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-datadog@17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)(terraconstructs@0.2.21(@aws-cdk/cloud-assembly-schema@54.26.0)(@aws-cdk/region-info@2.260.0)(@cdktn/provider-archive@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudinit@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-docker@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-time@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-tls@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(zod@4.4.3)
       cdktn:
         specifier: ^0.25.1
         version: 0.25.1(constructs@10.8.1)
@@ -47,6 +50,9 @@ importers:
       ts-morph:
         specifier: ^25.0.1
         version: 25.0.1
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
     devDependencies:
       '@aws-cdk/cloud-assembly-schema':
         specifier: ^54.17.0
@@ -90,6 +96,9 @@ importers:
       deepmerge:
         specifier: 4.3.1
         version: 4.3.1
+      fogg-helpers-v5:
+        specifier: npm:@vincenthsh/cdktf-fogg-helpers@5.0.1
+        version: '@vincenthsh/cdktf-fogg-helpers@5.0.1(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudflare@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-datadog@17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)(terraconstructs@0.2.21(@aws-cdk/cloud-assembly-schema@54.26.0)(@aws-cdk/region-info@2.260.0)(@cdktn/provider-archive@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudinit@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-docker@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-time@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-tls@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))'
       typescript:
         specifier: 5.9.2
         version: 5.9.2
@@ -930,6 +939,25 @@ packages:
   '@swc/types@0.1.17':
     resolution: {integrity: sha512-V5gRru+aD8YVyCOMAjMpWR1Ui577DD5KSJsHP8RAxopAH22jFz6GZd/qxqjO6MJHQhcsjvjOFXyDhyLQUnMveQ==}
 
+  '@tcons/component@0.2.0':
+    resolution: {integrity: sha512-UvBClAK5DyB7SVeZsWNGvWeXxHjOtFkMI2CgvGRttGyRl4sC4aZEQmVIkArBNtY8OR7WK2pVrqgsIFSIxR224Q==}
+    engines: {node: '>=22.23.4'}
+    peerDependencies:
+      '@cdktn/provider-aws': ^26.0.0
+      '@cdktn/provider-cloudflare': ^17.0.0
+      '@cdktn/provider-datadog': ^17.0.0
+      cdktn: ^0.25.1
+      constructs: ^10.7.2
+      terraconstructs: ^0.2.21
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      '@cdktn/provider-cloudflare':
+        optional: true
+      '@cdktn/provider-datadog':
+        optional: true
+      terraconstructs:
+        optional: true
+
   '@ts-morph/common@0.26.1':
     resolution: {integrity: sha512-Sn28TGl/4cFpcM+jwsH1wLncYq3FtN/BIpem+HOygfBWPT5pAeS5dB4VFVzV8FbnOKHpDLZmvAl4AjPEev5idA==}
 
@@ -941,6 +969,17 @@ packages:
 
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
+
+  '@vincenthsh/cdktf-fogg-helpers@5.0.1':
+    resolution: {integrity: sha512-YBBJzuVB7i7Ny3bAeEx0mfZoFO3XV7Wxw+aftL3uHwLpLYf3S2T5W3dUxrkNxZyb/7Gsx5mswJn6EZATbMo5Yg==}
+    engines: {node: '>=22.23.4'}
+    peerDependencies:
+      '@cdktn/provider-aws': ^26.0.0
+      '@cdktn/provider-cloudflare': ^17.0.0
+      '@cdktn/provider-datadog': ^17.0.0
+      cdktn: ^0.25.1
+      constructs: ^10.7.2
+      terraconstructs: ^0.2.21
 
   '@vitest/coverage-v8@2.1.9':
     resolution: {integrity: sha512-Z2cOr0ksM00MpEfyVE8KXIYPEcBFxdbLSs56L8PO0QQMxt/6bDj45uQfxoc96v05KW3clk7vvgP0qfDit9DmfQ==}
@@ -2848,6 +2887,17 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
+  '@tcons/component@0.2.0(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudflare@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-datadog@17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)(terraconstructs@0.2.21(@aws-cdk/cloud-assembly-schema@54.26.0)(@aws-cdk/region-info@2.260.0)(@cdktn/provider-archive@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudinit@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-docker@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-time@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-tls@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(zod@4.4.3)':
+    dependencies:
+      '@cdktn/provider-aws': 26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      cdktn: 0.25.1(constructs@10.8.1)
+      constructs: 10.8.1
+      zod: 4.4.3
+    optionalDependencies:
+      '@cdktn/provider-cloudflare': 17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      '@cdktn/provider-datadog': 17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      terraconstructs: 0.2.21(@aws-cdk/cloud-assembly-schema@54.26.0)(@aws-cdk/region-info@2.260.0)(@cdktn/provider-archive@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudinit@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-docker@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-time@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-tls@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+
   '@ts-morph/common@0.26.1':
     dependencies:
       fast-glob: 3.3.2
@@ -2861,6 +2911,17 @@ snapshots:
   '@types/node@22.20.1':
     dependencies:
       undici-types: 6.21.0
+
+  '@vincenthsh/cdktf-fogg-helpers@5.0.1(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudflare@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-datadog@17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)(terraconstructs@0.2.21(@aws-cdk/cloud-assembly-schema@54.26.0)(@aws-cdk/region-info@2.260.0)(@cdktn/provider-archive@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudinit@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-docker@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-time@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-tls@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))':
+    dependencies:
+      '@cdktn/provider-aws': 26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      '@cdktn/provider-cloudflare': 17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      '@cdktn/provider-datadog': 17.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      cdktn: 0.25.1(constructs@10.8.1)
+      constructs: 10.8.1
+      js-yaml: 4.1.0
+      terraconstructs: 0.2.21(@aws-cdk/cloud-assembly-schema@54.26.0)(@aws-cdk/region-info@2.260.0)(@cdktn/provider-archive@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-aws@26.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-cloudinit@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-docker@17.0.1(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-time@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(@cdktn/provider-tls@15.0.0(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1))(cdktn@0.25.1(constructs@10.8.1))(constructs@10.8.1)
+      ts-morph: 25.0.1
 
   '@vitest/coverage-v8@2.1.9(vitest@2.1.9(@types/node@22.20.1))':
     dependencies:

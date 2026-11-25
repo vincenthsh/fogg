@@ -4,6 +4,21 @@ This CDKTF library provides Helpers to integrate CDKTF applications with Fogg ge
 
 [npmjs](https://www.npmjs.com/org/vincenthsh)
 
+Since v6, `FoggStack` and `FoggTerraStack` are thin wrappers over the
+tool-neutral [`@tcons/component`](https://www.npmjs.com/package/@tcons/component)
+`ComponentStack` / `ComponentAwsStack`: this package reads
+`.fogg-component.yaml` (`FoggYamlSource`), maps it to a `ComponentConfig` and
+keeps the v5 API (`foggComp`, `remoteState`, `awsProvider`,
+`setMainModuleVariables`, ...). For the same component configuration the
+synthesized Terraform JSON is byte-identical to v5.0.1.
+
+### Upgrading from v5
+
+Bump the dependency to `^6.0.0`; existing `FoggStack` / `FoggTerraStack`
+subclasses and `remoteState(name, schema)` calls with v5 string schemas keep
+working. See the `BREAKING CHANGE` notes in the [CHANGELOG](./CHANGELOG.md)
+for the (type level and edge case) differences.
+
 ## Usage
 
 ### FoggStack
@@ -103,6 +118,20 @@ import { MyConstrct } from "@vincenthsh/my-construct"
     })
 ```
 
+### Configuration sources
+
+By default the stacks read `.fogg-component.yaml` from the current working
+directory. The location or the configuration itself can be overridden:
+
+```typescript
+new MyStack(app, 'stack', { configPath: 'path/to/.fogg-component.yaml' })
+new MyStack(app, 'stack', { source: new FoggYamlSource({ path, forceRemoteStates: true }) })
+new MyStack(app, 'stack', { config: myComponentConfig }) // any @tcons/component ComponentConfig
+```
+
+`foggComp` is only available when the configuration was read from a fogg
+component document (`config.raw`).
+
 ### FoggTerraStack
 
 FoggTerraStack exposes Fogg component configuration for advanced [TerraConstructs.dev](https://terraconstructs.dev) AwsStacks.
@@ -187,8 +216,9 @@ export const networkOutputsSchema: InferOutputSchema<NetworkOutputs> = {
 }
 ```
 
-> [!NOTE]
-> Frameworks such as [zod](https://zod.dev/) are under evaluation to provide alternative runtime validations with less duplication.
+> [!TIP]
+> Since v6 `remoteState()` also accepts a [zod](https://zod.dev/) object, which
+> is a runtime value and a type at once (see [Zod Output Schemas](#zod-output-schemas)).
 
 Once Construct authors provide this information, remote state can be accessed across states
 with Type Checks as shown in the following example.
@@ -277,6 +307,30 @@ interface NetworkOutputs {
   networkOutputs.endpoints.lookupNested('apiGateway', 'domain')
   // -> ${data.terraform_remote_state.network.outputs.endpoints.apiGateway.domain}
 ```
+
+#### Zod Output Schemas
+
+`remoteState()` accepts a zod object instead of a string schema. The accessor
+types are inferred from the schema, without a separate interface:
+
+```typescript
+import { z } from 'zod'
+
+export const networkOutputsSchema = z.object({
+  vpc_id: z.string(),                           // string
+  az_count: z.number(),                         // number
+  app_subnet_ids: z.array(z.string()),          // ListOutput<string>
+  endpoints: z.record(z.enum(['apigw', 's3']), z.string()), // MapOutput keyed 'apigw' | 's3'
+})
+
+//.. in class MyComponent extends FoggStack
+  const networkOutputs = this.remoteState('network', networkOutputsSchema)
+  networkOutputs.endpoints.lookup('apigw')
+  // -> ${data.terraform_remote_state.network.outputs.endpoints.apigw}
+```
+
+String schemas are converted with `fromLegacySchema()` (also exported), so both
+forms render the same Terraform expressions.
 
 #### Unit Testing Output Interfaces
 
