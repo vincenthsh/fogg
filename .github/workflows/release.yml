@@ -3,9 +3,15 @@ on:
     branches:
       - feat-multi-module-components
   # Manual npm publish through this workflow file, which is the one the npm
-  # trusted publisher is bound to. Use it to publish a release whose
-  # release-please run already happened (release_created is only true once).
+  # trusted publisher is bound to. Use it to re-publish a release whose
+  # release-please run already happened (release_created is only true once)
+  # after a failed publish. pnpm skips versions already on npm.
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (pack only, no publish). Uncheck to actually publish."
+        type: boolean
+        default: true
 
 name: release-please
 env:
@@ -81,5 +87,6 @@ jobs:
         # Authenticates with npm trusted publishing (OIDC, id-token: write above).
         # No NPM_TOKEN: the npm trusted publisher for this package is bound to
         # vincenthsh/fogg + release.yml. pnpm skips versions already on npm.
-        run: pnpm ci:publish
+        # On a manual dispatch dry_run defaults to true; push events always publish.
+        run: pnpm ci:publish ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
         if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
