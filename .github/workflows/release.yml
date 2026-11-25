@@ -12,6 +12,10 @@ on:
         description: "Dry run (pack only, no publish). Uncheck to actually publish."
         type: boolean
         default: true
+      go_release_tag:
+        description: "Instead of npm: build and upload GoReleaser binaries for this existing fogg tag (e.g. v0.95.3)."
+        type: string
+        default: ""
 
 name: release-please
 env:
@@ -37,29 +41,47 @@ jobs:
           token: ${{ secrets.VINCENT_PAT }}
 
       ## publish Go release
+      # Built from the fogg (root) tag in its own checkout with GORELEASER_CURRENT_TAG, not from
+      # HEAD: HEAD can be ahead of the release commit (re-runs), and the helpers tag sits on the
+      # same commit, which made GoReleaser pick cdktf-fogg-helpers-v* as the current tag.
+
+      - name: Resolve fogg release tag
+        id: go
+        run: echo "tag=${GO_TAG}" >> "$GITHUB_OUTPUT"
+        env:
+          GO_TAG: ${{ steps.release.outputs.release_created && steps.release.outputs.tag_name || inputs.go_release_tag }}
+        if: ${{ steps.release.outputs.release_created || (github.event_name == 'workflow_dispatch' && inputs.go_release_tag != '') }}
 
       - uses: actions/checkout@v7
-        # we need to fetch all history and tags
-        # so we build the proper version
+        # full history and tags so GoReleaser computes the changelog / previous tag
         with:
           fetch-depth: 0
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+          ref: ${{ steps.go.outputs.tag }}
+          path: go-release
+        if: ${{ steps.go.outputs.tag != '' }}
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
-        if: ${{ steps.release.outputs.release_created }}
+          go-version-file: go-release/go.mod
+        if: ${{ steps.go.outputs.tag != '' }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
           args: release --clean
+          workdir: go-release
         env:
           GITHUB_TOKEN: ${{ secrets.VINCENT_PAT }}
-        if: ${{ steps.release.outputs.release_created }}
+          GORELEASER_CURRENT_TAG: ${{ steps.go.outputs.tag }}
+        if: ${{ steps.go.outputs.tag != '' }}
 
       ## publish CDKTF pkg
+      # Gated on the helpers path's own release (release_created only covers the root package,
+      # and helpers-only releases happen since root exclude-paths ignores packages/).
+
+      - uses: actions/checkout@v7
+        if: ${{ !cancelled() && (steps.release.outputs['packages/cdktf-fogg-constructs--release_created'] || (github.event_name == 'workflow_dispatch' && inputs.go_release_tag == '')) }}
 
       # pnpm required for setup-node cache support
       # ref:
@@ -70,23 +92,23 @@ jobs:
         uses: pnpm/action-setup@v6.1.1
         with:
           run_install: false
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ !cancelled() && (steps.release.outputs['packages/cdktf-fogg-constructs--release_created'] || (github.event_name == 'workflow_dispatch' && inputs.go_release_tag == '')) }}
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: "pnpm"
           registry-url: 'https://registry.npmjs.org'
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ !cancelled() && (steps.release.outputs['packages/cdktf-fogg-constructs--release_created'] || (github.event_name == 'workflow_dispatch' && inputs.go_release_tag == '')) }}
       - name: Run pnpm Build
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ !cancelled() && (steps.release.outputs['packages/cdktf-fogg-constructs--release_created'] || (github.event_name == 'workflow_dispatch' && inputs.go_release_tag == '')) }}
       - name: Run pnpm Publish
         # Authenticates with npm trusted publishing (OIDC, id-token: write above).
         # No NPM_TOKEN: the npm trusted publisher for this package is bound to
         # vincenthsh/fogg + release.yml. pnpm skips versions already on npm.
         # On a manual dispatch dry_run defaults to true; push events always publish.
         run: pnpm ci:publish ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ !cancelled() && (steps.release.outputs['packages/cdktf-fogg-constructs--release_created'] || (github.event_name == 'workflow_dispatch' && inputs.go_release_tag == '')) }}
