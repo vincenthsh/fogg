@@ -12,16 +12,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "exclude-paths": [
-        "packages",
-        "package.json",
-        "pnpm-lock.yaml",
-        "pnpm-workspace.yaml",
-        "turbo.json",
-        "biome.json",
-        ".npmrc",
-        ".nvmrc"
-      ]
+      "exclude-paths": ["packages"]
     },
     "packages/cdktf-fogg-constructs": {}
   },
