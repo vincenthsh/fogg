@@ -1,359 +1,79 @@
-import { provider as awsProvider } from '@cdktn/provider-aws'
-import { provider as cloudflareProvider } from '@cdktn/provider-cloudflare'
-import { provider as dataDogProvider } from '@cdktn/provider-datadog'
+import type { provider as awsProvider } from '@cdktn/provider-aws'
+import type {
+  LegacyRemoteStateSchema,
+  RemoteStateOutputs,
+  RemoteStateSchema,
+  StringifiedRecord,
+} from '@tcons/component'
+import { ComponentAwsStack } from '@tcons/component/aws'
+import type { InferOutputSchema } from '@tcons/component/legacy'
+import type { Construct } from 'constructs'
+import type { AwsStackProps } from 'terraconstructs/lib/aws'
 import {
-  DataTerraformRemoteState,
-  DataTerraformRemoteStateS3,
-  DataTerraformRemoteStateS3Config,
-  S3Backend,
-  S3BackendConfig,
-  TerraformHclModule,
-  TerraformLocal,
-} from 'cdktn'
-import { Construct } from 'constructs'
-import { AwsStack, AwsStackProps } from 'terraconstructs/lib/aws'
-import { type FoggStackProps, IFoggStack } from './fogg-stack'
+  type FoggStackProps,
+  type IFoggStack,
+  resolveFoggStackConfig,
+} from './fogg-stack'
+import { foggComponentOf } from './fogg-yaml-source'
+import type { Component } from './imports/fogg-types.generated'
 import {
-  AWSProvider,
-  Backend,
-  Component,
-  DatadogProvider,
-  GenericProvider,
-} from './imports/fogg-types.generated'
-import { loadComponentConfig } from './util/load-component-config'
-import {
-  type InferOutputSchema,
-  RemoteStateAccessProxy,
-} from './util/remote-state-access-proxy'
-import type { Mutable, StringifiedRecord } from './util/types'
+  type FoggRemoteStateSchema,
+  toRemoteStateSchema,
+} from './util/remote-state'
 
 export interface FoggTerraStackProps
   extends FoggStackProps,
     Omit<AwsStackProps, 'providerConfig'> {}
 
-// TODO: Convert Fogg component configuration handlers to component class
+function toComponentAwsStackProps(props: FoggTerraStackProps) {
+  const {
+    forceRemoteStates: _forceRemoteStates,
+    configPath: _configPath,
+    source: _source,
+    config: _config,
+    ...awsStackProps
+  } = props
+  return { ...awsStackProps, config: resolveFoggStackConfig(props) }
+}
 
 /**
  * Helper AwsStack to wrap Fogg component configuration and set up configured providers and backends.
+ *
+ * A thin wrapper over `@tcons/component/aws`'s `ComponentAwsStack`,
+ * configured from `.fogg-component.yaml` (or the `source` / `config` props).
  */
-export class FoggTerraStack extends AwsStack implements IFoggStack {
-  public readonly foggComp: Component
-  public readonly modules: Record<string, TerraformHclModule> = {}
-  public readonly locals: Record<string, TerraformLocal> = {}
-  private readonly _remoteStates: Record<string, DataTerraformRemoteState> = {}
-
+export class FoggTerraStack extends ComponentAwsStack implements IFoggStack {
   constructor(scope: Construct, id: string, props: FoggTerraStackProps) {
-    const foggComp = loadComponentConfig()
-    const awsProviderConfig = parseAwsProviderConfig(
-      foggComp,
-      props.defaultTags,
-      props.ignoreTags,
-    )
-    super(scope, id, {
-      ...props,
-      providerConfig: awsProviderConfig,
-    })
-    this.foggComp = foggComp
-
-    // terraconstructs >=0.2.5 creates the default AWS provider lazily (only on
-    // first access of `this.provider`/`region`/etc.). Fogg components must always
-    // emit their configured AWS provider (assume_role / region / default_tags),
-    // even when they wrap only HCL modules that never touch the provider — so
-    // materialize it eagerly here to preserve pre-0.2.5 behavior.
-    void this.provider
-
-    this.parseBackendConfig()
-    this.parseBundledProviderConfig()
-    for (const p of Object.values(this.foggComp.required_providers)) {
-      if (p.enabled) this.parseGenericProviderConfig(p)
-    }
-    // parse remote backends
-    const forceRemoteBackend = props.forceRemoteStates ?? false
-    if (forceRemoteBackend || this.foggComp.component_backends_filtered) {
-      for (const [name, remoteStateConfig] of Object.entries(
-        this.foggComp.component_backends,
-      )) {
-        this.parseRemoteState(name, remoteStateConfig)
-      }
-    }
-    this.parseLocalsBlock()
-    this.parseModules()
+    super(scope, id, toComponentAwsStackProps(props))
   }
 
   /**
-   * Set variables for the main module defined in the fogg component configuration.
+   * The Raw Fogg component configuration (`componentConfig.raw`).
    *
-   * @param variables - The variables to set for the module
+   * @throws if the config was not loaded from a fogg component document
    */
-  public setMainModuleVariables(variables: Record<string, any>): void {
-    const id = (this.foggComp.module_name = this.foggComp.module_name ?? 'main')
-    this.setModuleVariables(id, variables)
-  }
-
-  public remoteState<T>(name: string): StringifiedRecord<T>
-  public remoteState<T>(name: string, schema: InferOutputSchema<T>): T
-  public remoteState<T>(name: string, schema?: InferOutputSchema<T>): T {
-    if (!this._remoteStates[name]) {
-      throw new Error(`Remote state ${name} not found`)
-    }
-    return new RemoteStateAccessProxy(
-      this._remoteStates[name],
-      schema,
-    ).asObject()
-  }
-
-  public get defaultAwsProvider(): awsProvider.AwsProvider {
-    return this.provider
+  public get foggComp(): Component {
+    return foggComponentOf(this.componentConfig)
   }
 
   /**
-   * Set variables for a module included in the fogg component modules[] configuration.
-   *
-   * @param name - The module name as defined in the fogg component configuration
-   * @param variables - The variables to set for the module
+   * Return an AWS provider by alias (`DefaultAwsProvider` for the default one).
+   * @throws if the provider is not found
    */
-  public setModuleVariables(
+  public awsProvider(alias: string): awsProvider.AwsProvider {
+    return this.componentWiring.awsProvider(alias)
+  }
+
+  public remoteState<T = Record<string, string>>(
     name: string,
-    variables: Record<string, any>,
-  ): void {
-    if (!this.modules[name]) {
-      throw new Error(`Module ${name} not found`)
-    }
-    for (const [key, value] of Object.entries(variables)) {
-      this.modules[name].set(key, value)
-    }
+  ): StringifiedRecord<T>
+  public remoteState<T>(name: string, schema: LegacyRemoteStateSchema<T>): T
+  public remoteState<S extends RemoteStateSchema>(
+    name: string,
+    schema: S,
+  ): RemoteStateOutputs<S>
+  public remoteState<T>(name: string, schema: InferOutputSchema<T>): T
+  public remoteState(name: string, schema?: FoggRemoteStateSchema): unknown {
+    return super.remoteState(name, toRemoteStateSchema(schema) as any)
   }
-
-  /**
-   * Get a local defined in the fogg component configuration.
-   *
-   * @param name the name of the local to get
-   * @returns the TerraformLocal object
-   */
-  public getLocal(name: string): TerraformLocal {
-    if (!this.locals[name]) {
-      throw new Error(`Local ${name} not found`)
-    }
-    return this.locals[name]
-  }
-
-  private parseBackendConfig(): void {
-    if (this.foggComp.backend.kind === 's3' && this.foggComp.backend.s3) {
-      const s3Config = this.foggComp.backend.s3
-      const s3BackendConfig: Mutable<S3BackendConfig> = {
-        bucket: s3Config.bucket,
-        dynamodbTable: s3Config.dynamo_table,
-        key: s3Config.key_path,
-        region: s3Config.region,
-        encrypt: true,
-      }
-      if (s3Config.profile) {
-        s3BackendConfig.profile = s3Config.profile
-      } else if (s3Config.role_arn) {
-        s3BackendConfig.assumeRole = {
-          roleArn: s3Config.role_arn,
-        }
-      }
-      // console.log(
-      //   `Setting S3 backend Config ${JSON.stringify(s3BackendConfig, null, 2)}`
-      // );
-      new S3Backend(this, s3BackendConfig)
-    } else {
-      throw new Error(
-        `Unsupported backend configuration ${this.foggComp.backend.kind}`,
-      )
-    }
-  }
-
-  private parseRemoteState(id: string, remoteConfig: Backend): void {
-    if (remoteConfig.kind === 's3' && remoteConfig.s3) {
-      const s3Config = remoteConfig.s3
-      const remoteStateConfig: Mutable<DataTerraformRemoteStateS3Config> = {
-        bucket: s3Config.bucket,
-        dynamodbTable: s3Config.dynamo_table,
-        key: s3Config.key_path,
-        region: s3Config.region,
-        encrypt: true,
-      }
-      if (s3Config.profile) {
-        remoteStateConfig.profile = s3Config.profile
-      } else if (s3Config.role_arn) {
-        remoteStateConfig.assumeRole = {
-          roleArn: s3Config.role_arn,
-        }
-      }
-      this._remoteStates[id] = new DataTerraformRemoteStateS3(
-        this,
-        id,
-        remoteStateConfig,
-      )
-    } else {
-      throw new Error(`Unsupported backend configuration ${remoteConfig.kind}`)
-    }
-  }
-
-  private parseBundledProviderConfig(): void {
-    const providers = this.foggComp.providers_configuration
-    if (providers.datadog) {
-      this.parseDataDogProviderConfig(providers.datadog)
-    }
-  }
-
-  /**
-   * Instantiate supported generic providers.
-   */
-  private parseGenericProviderConfig(provider: GenericProvider): void {
-    switch (provider.source) {
-      case 'cloudflare/cloudflare':
-        this.parseCloudflareProviderConfig(provider)
-        break
-      default:
-        throw new Error(`Unsupported provider ${provider.source}`)
-    }
-  }
-
-  private parseLocalsBlock() {
-    if (this.foggComp.locals_block) {
-      for (const [key, value] of Object.entries(this.foggComp.locals_block)) {
-        this.locals[key] = new TerraformLocal(this, key, `\${${value}}`)
-      }
-    }
-  }
-
-  private parseModules() {
-    if (this.foggComp.module_source) {
-      const id = (this.foggComp.module_name =
-        this.foggComp.module_name ?? 'main')
-      this.modules[id] = new TerraformHclModule(this, id, {
-        source: this.foggComp.module_source,
-      })
-    }
-
-    for (let i = 0; i < this.foggComp.modules.length; i++) {
-      const moduleConfig = this.foggComp.modules[i]
-      const id = moduleConfig.name ?? `module_${i}`
-      if (!moduleConfig.source) {
-        console.warn(`Module ${id} does not have a source, skipping`)
-        continue
-      }
-      if (this.modules[id]) {
-        throw new Error(`Module ${id} already exists`)
-      }
-      if (!moduleConfig.name) {
-        console.log(
-          `Module ${moduleConfig.source} does not have a name, using ${id}`,
-        )
-      }
-      this.modules[id] = new TerraformHclModule(this, id, {
-        source: moduleConfig.source,
-        version: moduleConfig.version,
-      })
-      // TODO: Add validation for module variables
-      // TODO: Export module outputs
-    }
-  }
-
-  private parseDataDogProviderConfig(_provider: DatadogProvider): void {
-    // TODO: There's no datadog provider config?
-    new dataDogProvider.DatadogProvider(this, 'datadog', {})
-  }
-
-  private parseCloudflareProviderConfig(provider: GenericProvider): void {
-    // The fogg provided provider.config is not `CloudflareProviderConfig` must use overrides
-    const cf = new cloudflareProvider.CloudflareProvider(this, 'cloudflare')
-    for (const [key, value] of Object.entries(provider.config)) {
-      cf.addOverride(key, value)
-    }
-  }
-}
-
-// Parse AWS Provider config from Fogg component configuration
-function parseAwsProviderConfig(
-  foggComp: Component,
-  defaultTags?: Record<string, string>,
-  ignoreTags?: awsProvider.AwsProviderIgnoreTags,
-): awsProvider.AwsProviderConfig {
-  const providers = foggComp.providers_configuration
-  if (
-    providers.aws_regional_providers &&
-    providers.aws_regional_providers.length > 0
-  ) {
-    throw new Error(
-      'AWS regional providers are not supported by terraconstruct components',
-    )
-  }
-  if (providers.aws) {
-    return getAwsProviderConfig(
-      foggComp,
-      providers.aws,
-      defaultTags,
-      ignoreTags,
-    )
-  }
-  throw new Error('AWS provider configuration not found')
-}
-
-function getAwsProviderConfig(
-  foggComp: Component,
-  config: AWSProvider,
-  defaultTags?: Record<string, string>,
-  ignoreTags?: awsProvider.AwsProviderIgnoreTags,
-): awsProvider.AwsProviderConfig {
-  const c: Mutable<awsProvider.AwsProviderConfig> = {
-    region: config.region,
-    alias: config.alias,
-  }
-  if (config.default_tags && config.default_tags.enabled) {
-    c.defaultTags = [
-      {
-        tags: {
-          env: foggComp.env,
-          owner: foggComp.owner,
-          project: foggComp.project,
-          managedBy: 'terraform',
-          service: foggComp.name,
-          ...(foggComp.backend.s3?.key_path && {
-            tfstateKey: foggComp.backend.s3?.key_path,
-          }),
-          ...(foggComp.providers_configuration?.aws?.default_tags?.enabled &&
-            (foggComp.providers_configuration?.aws?.default_tags?.tags ?? {})),
-          ...(defaultTags ?? {}),
-        },
-      },
-    ]
-  }
-  let _ignoreTags: awsProvider.AwsProviderIgnoreTags | undefined
-  if (config.ignore_tags && config.ignore_tags.enabled) {
-    _ignoreTags = {
-      keys: config.ignore_tags.keys,
-      keyPrefixes: config.ignore_tags.key_prefixes,
-    }
-  }
-  if (ignoreTags) {
-    const keys = new Set([
-      ...(_ignoreTags?.keys ?? []),
-      ...(ignoreTags.keys ?? []),
-    ])
-    const keyPrefixes = new Set([
-      ...(_ignoreTags?.keyPrefixes ?? []),
-      ...(ignoreTags.keyPrefixes ?? []),
-    ])
-    _ignoreTags = {
-      keys: keys.size > 0 ? Array.from(keys) : undefined,
-      keyPrefixes: keyPrefixes.size > 0 ? Array.from(keyPrefixes) : undefined,
-    }
-  }
-  if (_ignoreTags) {
-    c.ignoreTags = [_ignoreTags]
-  }
-  if (config.profile) {
-    c.profile = config.profile
-  } else if (config.role_arn) {
-    c.assumeRole = [
-      {
-        roleArn: config.role_arn,
-      },
-    ]
-  }
-  return c
 }

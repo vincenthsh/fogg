@@ -1,27 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import 'cdktn/lib/testing/adapters/jest'
 import { App, Fn, TerraformOutput, Testing } from 'cdktn'
 import merge from 'deepmerge'
-import { FoggTerraStack } from '../src/fogg-terrastack'
-import type { Component } from '../src/imports/fogg-types.generated'
-import type {
-  InferOutputSchema,
-  ListOutput,
-  MapOutput,
-} from '../src/util/remote-state-access-proxy'
+import type { Component, FoggTerraStack as FoggTerraStackType } from '../src'
+import type { InferOutputSchema, ListOutput, MapOutput } from '../src'
 import { Template } from './assertions'
+import { IMPLS, givenComponent, setupParity } from './helpers/parity'
 
-// hoisted mock, can't capture variable for vi.fn() mock
-vi.mock(import('../src/util/load-component-config'), async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    loadComponentConfig: vi.fn(),
-  }
-})
-// get Mock handle through module re-import with mock in effect
-import { loadComponentConfig as mockedLoadCompCfg } from '../src/util/load-component-config'
-const loadComponentConfig = mockedLoadCompCfg as ReturnType<typeof vi.fn>
+setupParity()
 
 // Prefix for resource UUID, should never change for component lifecycle.
 // Must be letter-leading: terraconstructs >= 0.2.8 validates gridUUID against
@@ -31,15 +17,14 @@ const gridUUID = 'g123-456'
 // This is used as a tag and may change over time
 const environmentName = 'development'
 let app: App
-describe('FoggTerraStack', () => {
+describe.each(IMPLS)('FoggTerraStack [$name]', ({ FoggTerraStack }) => {
   beforeEach(() => {
     app = Testing.app()
-    loadComponentConfig.mockReset()
   })
 
   it('translates fogg backend config to tf backend config', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         backend: {
           kind: 's3',
@@ -72,7 +57,7 @@ describe('FoggTerraStack', () => {
 
   it('throws error on unsupported backend', () => {
     // WHEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         backend: { kind: 'unknown' },
       }),
@@ -85,7 +70,7 @@ describe('FoggTerraStack', () => {
 
   it('skips creating remote states if forceRemoteStates is false', () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         component_backends: {
           network: {
@@ -110,7 +95,7 @@ describe('FoggTerraStack', () => {
   })
 
   it('creates remote states if forceRemoteStates is true', () => {
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         component_backends: {
           network: {
@@ -140,7 +125,7 @@ describe('FoggTerraStack', () => {
   })
 
   describe('creates remote states if forceRemoteStates is true', () => {
-    let stack: FoggTerraStack
+    let stack: FoggTerraStackType
     /**
      * helper to add a TerraformOutput to the stack
      */
@@ -151,7 +136,7 @@ describe('FoggTerraStack', () => {
       })
     }
     beforeEach(() => {
-      loadComponentConfig.mockReturnValue(
+      givenComponent(
         merge(getDefaultComponentConfig(), {
           component_backends: {
             network: {
@@ -268,7 +253,7 @@ describe('FoggTerraStack', () => {
 
   it('exposes file dependencies through locals', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         locals_block: {
           foo_foo_foo: 'yamldecode(file("../../../foo-fooFoo.yaml"))',
@@ -293,7 +278,7 @@ describe('FoggTerraStack', () => {
 
   it('allows configuring modules', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         modules: [
           {
@@ -332,8 +317,8 @@ describe('FoggTerraStack', () => {
   it('allows configuring main module', async () => {
     // GIVEN
     const module_source = 'terraform/modules/foo'
-    loadComponentConfig.mockReturnValue(
-      merge(getDefaultComponentConfig(), {
+    givenComponent(
+      merge<Component>(getDefaultComponentConfig(), {
         module_source,
       }),
     )
@@ -360,7 +345,7 @@ describe('FoggTerraStack', () => {
 
   it('throws error setting variable without module_source', () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(getDefaultComponentConfig())
+    givenComponent(getDefaultComponentConfig())
     // THEN
     const stack = new FoggTerraStack(app, 'MyStack', {
       gridUUID,
@@ -373,7 +358,7 @@ describe('FoggTerraStack', () => {
 
   it('exposes default Aws provider', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -396,7 +381,7 @@ describe('FoggTerraStack', () => {
 
   it('throws on aliased providers', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -425,7 +410,7 @@ describe('FoggTerraStack', () => {
 
   it('sets foggComponent default tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -471,7 +456,7 @@ describe('FoggTerraStack', () => {
 
   it('sets foggComponent ignore tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -509,7 +494,7 @@ describe('FoggTerraStack', () => {
 
   it('sets foggComponent default and constructor default tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -561,7 +546,7 @@ describe('FoggTerraStack', () => {
 
   it('sets foggComponent ignore and constructor ignore tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -602,7 +587,7 @@ describe('FoggTerraStack', () => {
 
   it('sets constructor ignore tags', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           aws: {
@@ -639,7 +624,7 @@ describe('FoggTerraStack', () => {
 
   it('exposes fogg component configuration values', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(getDefaultComponentConfig())
+    givenComponent(getDefaultComponentConfig())
     // WHEN
     const stack = new FoggTerraStack(app, 'MyStack', {
       gridUUID,
@@ -653,7 +638,7 @@ describe('FoggTerraStack', () => {
 
   it('parses bundled and generic provider configurations', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         providers_configuration: {
           datadog: {
@@ -713,7 +698,7 @@ describe('FoggTerraStack', () => {
 
   it('throws for unsupported generic providers', async () => {
     // GIVEN
-    loadComponentConfig.mockReturnValue(
+    givenComponent(
       merge(getDefaultComponentConfig(), {
         required_providers: {
           bar: {
