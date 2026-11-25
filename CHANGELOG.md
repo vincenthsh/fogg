@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.95.3](https://github.com/vincenthsh/fogg/compare/v0.95.2...v0.95.3) (2026-11-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **helpers:** FoggStack now extends @tcons/component ComponentStack and FoggTerraStack extends ComponentAwsStack (still a TerraformStack / AwsStack). They inherit the public `componentConfig` and `componentWiring` getters; subclasses declaring members with those names conflict. `IFoggStack#remoteState` gained the zod and `fromLegacySchema` overloads; classes implementing `IFoggStack` directly must accept them. the internal modules `dist/util/remote-state-access-proxy` (`RemoteStateAccessProxy`) and `dist/util/types` (`Mutable`) are removed. `StringifiedRecord`, `InferOutputSchema`, `ListOutput` and `MapOutput` are exported from the package root. v5 string schemas with an unknown output type now throw ("Unsupported legacy output type") instead of falling back to `get()`. new runtime dependencies `@tcons/component` and `zod`; the "Module <source> does not have a name" console.log is no longer printed; the remote state not-found error message now lists the declared dependencies (it still starts with "Remote state <name> not found").
+
+### Features
+
+* **helpers:** rebuild FoggStack and FoggTerraStack on @tcons/component ([#524](https://github.com/vincenthsh/fogg/issues/524)) ([06b79a5](https://github.com/vincenthsh/fogg/commit/06b79a5fb25903bbddabb817a8e8380f101ea5fc))
+* pin generated components to @vincenthsh/cdktf-fogg-helpers ^6.0.0 ([#525](https://github.com/vincenthsh/fogg/issues/525)) ([7abdd19](https://github.com/vincenthsh/fogg/commit/7abdd192ebeaeda87cedf180ca6177c6c4154db9))
+
+
+### Misc
+
+* **release:** scope fogg releases to the Go binary ([#523](https://github.com/vincenthsh/fogg/issues/523)) ([4379ac9](https://github.com/vincenthsh/fogg/commit/4379ac9a40545b0b05737e63922ca6906f5d66ec))
+* remove NPM_TOKEN force-publish workflow, add dry-run to release dispatch ([#521](https://github.com/vincenthsh/fogg/issues/521)) ([ef2ece5](https://github.com/vincenthsh/fogg/commit/ef2ece502d512af8f6d2c39dcd15ab78f7b4fb45))
+
 ## [0.95.2](https://github.com/vincenthsh/fogg/compare/v0.95.1...v0.95.2) (2026-11-20)
 
 
