@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v5.0.1...cdktf-fogg-helpers-v6.0.0) (2026-11-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **helpers:** FoggStack now extends @tcons/component ComponentStack and FoggTerraStack extends ComponentAwsStack (still a TerraformStack / AwsStack). They inherit the public `componentConfig` and `componentWiring` getters; subclasses declaring members with those names conflict. `IFoggStack#remoteState` gained the zod and `fromLegacySchema` overloads; classes implementing `IFoggStack` directly must accept them. the internal modules `dist/util/remote-state-access-proxy` (`RemoteStateAccessProxy`) and `dist/util/types` (`Mutable`) are removed. `StringifiedRecord`, `InferOutputSchema`, `ListOutput` and `MapOutput` are exported from the package root. v5 string schemas with an unknown output type now throw ("Unsupported legacy output type") instead of falling back to `get()`. new runtime dependencies `@tcons/component` and `zod`; the "Module <source> does not have a name" console.log is no longer printed; the remote state not-found error message now lists the declared dependencies (it still starts with "Remote state <name> not found").
+
+### Features
+
+* **helpers:** rebuild FoggStack and FoggTerraStack on @tcons/component ([#524](https://github.com/vincenthsh/fogg/issues/524)) ([06b79a5](https://github.com/vincenthsh/fogg/commit/06b79a5fb25903bbddabb817a8e8380f101ea5fc))
+
 ## [5.0.1](https://github.com/vincenthsh/fogg/compare/cdktf-fogg-helpers-v5.0.0...cdktf-fogg-helpers-v5.0.1) (2026-11-20)
 
 
