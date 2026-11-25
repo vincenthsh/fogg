@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.95.4](https://github.com/vincenthsh/fogg/compare/v0.95.3...v0.95.4) (2026-11-25)
+
+
+### Misc
+
+* **release:** keep only directory entries in root exclude-paths ([#526](https://github.com/vincenthsh/fogg/issues/526)) ([1de0cee](https://github.com/vincenthsh/fogg/commit/1de0ceed29554c798f1018182afb2363db21b6b3))
+
+
+### BugFixes
+
+* **ci:** build GoReleaser from the fogg tag, gate npm on the helpers release ([#528](https://github.com/vincenthsh/fogg/issues/528)) ([fa22226](https://github.com/vincenthsh/fogg/commit/fa222264d565b6e6930c9847a15dbaa961016a13))
+
 ## [0.95.3](https://github.com/vincenthsh/fogg/compare/v0.95.2...v0.95.3) (2026-11-25)
 
 
